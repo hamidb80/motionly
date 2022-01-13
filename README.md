@@ -1,5 +1,5 @@
 # motionly
-~~a logic less animation software for everyone
+~~a logic less animation software for everyone~~
 
 here, you code animations!
 using konva and tweenjs
