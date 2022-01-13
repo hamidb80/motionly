@@ -8,6 +8,10 @@ the first demo is gonna be something like this:
 http://thesecretlivesofdata.com/raft/
 or this https://github.com/EriKWDev/nanim
 
+before:
+https://github.com/bluenote10/NimSvg
+https://github.com/jiro4989/svgo
+
 example: 
 ```nim
 
