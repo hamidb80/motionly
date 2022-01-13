@@ -16,7 +16,7 @@ randomize()
 # your nim code here -----------
 
 # motionly area ----------------
-motionly:
+let controlFlow = motionly:
   stage: # known components before creating the scene
     rect(fill= "#fff", ..., @box) # assign svg component to box variable
     circ(fill= "#fff", ..., @blocks[0]) # as array
@@ -24,15 +24,25 @@ motionly:
 
     group: # yes we have groups | we have everything in svg
       arc(...)  
+  
+  # defining function that works with DSL
+  util do_it_whenever_you_want(arg1: seq[int])= # utlls doesn't return anything
+    # your nim code ...
+    1
 
+  # animation area ----
+  stage 0.ms .. 100.ms:
+    @box.x = `rand(11)` # put your nim code inside backticks (`)
+    @blocks[0].content = `"hamid".upper`
+    
   ## >>
-  flow: # wrapper for all animations
-    stage 0.ms .. 100.ms:
-      @box.x = `rand(11)` # put your nim code inside backticks (`)
-      @blocks[0].content = `"hamid".upper`
-      
+  stage 150.ms .. 200.ms:
+    @box.x = `rand(11)` # put your nim code inside backticks (`)
+    @blocks[0].content = `"hamid".upper`
   ## <<
   
-  # the `>>` means the frontend should start animation preview from here
-  # `<<` is optional
+  # the `>>` means the front-end should start animation preview from here
+  # `<<` means opposite, optional
 ```
+
+controlFlow.run
