@@ -55,3 +55,11 @@ let controlFlow = motionly:
   
 controlFlow.run
 ```
+
+## Goals:
+[ ] add svg manipulation like: scale, transform, ...
+[ ] add deep copy or delete from screen
+[ ] runs on browser
+[ ] control prevoewL like start and stop framw
+[ ] useing nim code with DLS
+
