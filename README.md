@@ -22,8 +22,13 @@ let controlFlow = motionly:
     circ(fill= "#fff", ..., @blocks[0]) # as array
     line(...) # you don't need to store all components inside a variable
 
-    group: # yes we have groups | we have everything in svg
+    group: # yes we have groups | we have everything in SVG
       arc(...)  
+      
+    # you can throw raw SVG by the way
+    raw """
+      <rect .../>
+    """
   
   # defining function that works with DSL
   util do_it_whenever_you_want(arg1: seq[int])= # utlls doesn't return anything
@@ -43,6 +48,6 @@ let controlFlow = motionly:
   
   # the `>>` means the front-end should start animation preview from here
   # `<<` means opposite, optional
-```
-
+  
 controlFlow.run
+```
