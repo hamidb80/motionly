@@ -8,6 +8,7 @@ here, you code animations!
 2. https://github.com/EriKWDev/nanim
 3. https://github.com/bluenote10/NimSvg
 4. https://github.com/jiro4989/svgo
+5. https://www.introbrand.com/
 
 example: 
 ```nim
