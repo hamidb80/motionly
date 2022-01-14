@@ -43,6 +43,7 @@ let
     before:
       discard # do anything before starting animation
     
+    # TODO: flows can have args
     flow reset: # a named flow
       stage.remove @blocks[1]
     
