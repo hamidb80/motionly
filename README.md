@@ -81,4 +81,5 @@ recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 
 * [ ] runs on browser
 * [ ] control preview like start and stop frame
 * [ ] useing nim code with DLS
+* [ ] compose it with another stage and control flow (make it reusable)
 
