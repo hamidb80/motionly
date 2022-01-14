@@ -17,7 +17,7 @@ import algorithm, sequtils, ...
 
 genSVGTree stage:
   rect(fill= "#fff", ...) as @box # assign svg component to box variable
-  circ(fill= "#fff", ...) as @block[0] # as array
+  circ(fill= "#fff", ...) as @blocks[0] # as array
   line(...) # you don't need to store all components inside a variable
 
   group: # yes we have groups | we have everything in SVG
@@ -27,8 +27,12 @@ genSVGTree stage:
     <rect .../>
   """
   embed readfile "./assets/car.svg" # or embed external svg?
-  embed someFunctionThatReturnsStringOrSvgTree() as @table
-
+  
+  embed myComponent("arg1", ..., <injected_here>) as @table:
+    # your custom component can have slots like vue-js
+    # the slot injected as its last argument when parsed to svgTree
+    circ(...) as @targer
+      
 var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
 # kf: key frame
