@@ -17,8 +17,8 @@ import algorithm, sequtils, ...
 
 var 
   stage = genSVGTree:
-    rect(fill= "#fff", ..., @box) # assign svg component to box variable
-    circ(fill= "#fff", ..., @blocks[0]) # as array
+    rect(fill= "#fff", ...) as @box # assign svg component to box variable
+    circ(fill= "#fff", ...) as @block[0] # as array
     line(...) # you don't need to store all components inside a variable
 
     group: # yes we have groups | we have everything in SVG
@@ -28,7 +28,9 @@ var
       <rect .../>
     """
     embed readfile "./assets/car.svg" # or embed external svg?
-    embed someFunctionThatReturnsStringOrSvgTree()
+    embed someFunctionThatReturnsStringOrSvgTree() as @table
+    
+var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
 # kf: key frame
 # type Progress = range[0.0 .. 100.0]
