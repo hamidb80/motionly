@@ -2,15 +2,12 @@
 ~~a logic less animation software for everyone~~
 
 here, you code animations!
-using konva and tweenjs
 
-the first demo is gonna be something like this:
-http://thesecretlivesofdata.com/raft/
-or this https://github.com/EriKWDev/nanim
-
-before:
-https://github.com/bluenote10/NimSvg
-https://github.com/jiro4989/svgo
+**see these for inspiration:**
+1. http://thesecretlivesofdata.com/raft/
+2. https://github.com/EriKWDev/nanim
+3. https://github.com/bluenote10/NimSvg
+4. https://github.com/jiro4989/svgo
 
 example: 
 ```nim
@@ -35,6 +32,15 @@ var
     embed readfile "./assets/car.svg" # or embed external svg?
     embed someFunctionThatReturnsStringOrSvgTree()
 
+# progress is in 0.0 .. 100.0
+func mySuperCoolAnimation(
+  sc: SvgTree, 
+  keyframes: tuple[start, dest: SomeType], 
+  progress: float
+): SvgTree =
+
+discard
+
 let 
   recording = record(stage): # animation area ----
     before:
@@ -56,7 +62,7 @@ let
       scale(@blocks[0], 1.1).transition(dt, eCricleOut)
       
     stage 170.ms .. 210.ms: # yes, stages can have innersects in timing
-      scale(@blocks[1], 0.9).transition(dt, eCricleOut)
+      scale(@blocks[1], 0.9) ~> (dt, eCricleOut) # custom operator is cool
 
 recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 0.ms .. 1000.ms)
 ```
@@ -64,7 +70,8 @@ recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 
 ## Goals:
 * [ ] add svg manipulation like: scale, transform, ...
 * [ ] add deep copy or delete from screen
+* [ ] custom animation function
 * [ ] runs on browser
-* [ ] control prevoewL like start and stop framw
+* [ ] control preview like start and stop frame
 * [ ] useing nim code with DLS
 
