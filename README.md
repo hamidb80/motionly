@@ -64,7 +64,7 @@ let
       # custom operator is cool
       mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn) 
 
-recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 0.ms .. 1000.ms)
+recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 0.ms .. 1000.ms, repeat= 1)
 ```
 
 ## Goals:
