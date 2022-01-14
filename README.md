@@ -23,15 +23,17 @@ genSVGTree stage:
   group: # yes we have groups | we have everything in SVG
     arc(...)  
 
+  myComponent("arg1", ..., <injected_here>) as @table: # yay, custom component
+    # your custom component can have slots like vue-js
+    # the slot injected as its last argument when parsed to svgTree
+    circ(...) as @targer
+    
   embed """ # you can throw raw SVG by the way
     <rect .../>
   """
   embed readfile "./assets/car.svg" # or embed external svg?
   
-  embed myComponent("arg1", ..., <injected_here>) as @table:
-    # your custom component can have slots like vue-js
-    # the slot injected as its last argument when parsed to svgTree
-    circ(...) as @targer
+
       
 var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
