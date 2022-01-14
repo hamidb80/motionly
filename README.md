@@ -12,11 +12,9 @@ here, you code animations!
 example: 
 ```nim
 
-import random, algorithm
-randomize()
-# your nim code here -----------
+import algorithm, sequtils, ...
 
-# motionly area ----------------
+
 var 
   stage = genSVGTree:
     rect(fill= "#fff", ..., @box) # assign svg component to box variable
@@ -32,17 +30,16 @@ var
     embed readfile "./assets/car.svg" # or embed external svg?
     embed someFunctionThatReturnsStringOrSvgTree()
 
-# progress is in 0.0 .. 100.0
+# kf: key frame
+# type Progress = range[0.0 .. 100.0]
 func mySuperCoolAnimation(
-  sc: SvgTree, 
-  keyframes: tuple[start, dest: SomeType], 
-  progress: float
+  st: SvgTree, kfstart, kfend: SomeType, p: Progress = 0.0
 ): SvgTree =
+  discard
 
-discard
 
 let 
-  recording = record(stage): # animation area ----
+  recording = show(stage):
     before:
       discard # do anything before starting animation
     
@@ -62,7 +59,8 @@ let
       scale(@blocks[0], 1.1).transition(dt, eCricleOut)
       
     stage 170.ms .. 210.ms: # yes, stages can have innersects in timing
-      scale(@blocks[1], 0.9) ~> (dt, eCricleOut) # custom operator is cool
+      # custom operator is cool
+      mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn) 
 
 recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 0.ms .. 1000.ms)
 ```
