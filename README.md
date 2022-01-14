@@ -15,21 +15,20 @@ example:
 import algorithm, sequtils, ...
 
 
-var 
-  stage = genSVGTree:
-    rect(fill= "#fff", ...) as @box # assign svg component to box variable
-    circ(fill= "#fff", ...) as @block[0] # as array
-    line(...) # you don't need to store all components inside a variable
+genSVGTree stage:
+  rect(fill= "#fff", ...) as @box # assign svg component to box variable
+  circ(fill= "#fff", ...) as @block[0] # as array
+  line(...) # you don't need to store all components inside a variable
 
-    group: # yes we have groups | we have everything in SVG
-      arc(...)  
+  group: # yes we have groups | we have everything in SVG
+    arc(...)  
 
-    embed """ # you can throw raw SVG by the way
-      <rect .../>
-    """
-    embed readfile "./assets/car.svg" # or embed external svg?
-    embed someFunctionThatReturnsStringOrSvgTree() as @table
-    
+  embed """ # you can throw raw SVG by the way
+    <rect .../>
+  """
+  embed readfile "./assets/car.svg" # or embed external svg?
+  embed someFunctionThatReturnsStringOrSvgTree() as @table
+
 var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
 # kf: key frame
@@ -45,7 +44,7 @@ let
     before:
       discard # do anything before starting animation
     
-    # TODO: flows can have args
+    # flows can have args
     flow reset: # a named flow
       stage.remove @blocks[1]
     
