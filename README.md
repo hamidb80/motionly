@@ -53,6 +53,7 @@ let
       stage.remove @blocks[1]
     
     stage 0.ms .. 100.ms:
+      # @box is a syntax suger for stage.components.box
       let k = move(@box, (10.px, 100.px)) # define a keyframe
       
       # register a transition 
