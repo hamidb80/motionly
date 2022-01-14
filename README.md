@@ -75,7 +75,7 @@ recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 
 ```
 
 ## Goals:
-* [ ] add svg manipulation like: scale, transform, ...
+* [ ] add svg manipulation like: scale, transform, ... (see this)[https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform]
 * [ ] add deep copy or delete from screen
 * [ ] custom animation function
 * [ ] runs on browser
