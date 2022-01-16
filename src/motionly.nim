@@ -1,36 +1,60 @@
+import algorithm, sequtils
+
 when false:
+  genSVGTree stage:
+    rect(fill = "#fff", _) as @box # assign svg component to box variable
+    circ(fill = "#fff", _) as @blocks[0] # as array
+    line(_) # you don't need to store all components inside a variable
 
-  expectation:
-    ## on | off with true | false
-    ## no runtime checks
-    ## compile time loop and macro expand
-    ## strong compile checks
+    group: # yes we have groups | we have everything in SVG
+      arc(_)
 
-    import std / [Table, Array]
+    myComponent("arg1", _, injected_here) as @table: # yay, custom component
+      # your custom component can have slots like vue-js
+      # the slot injected as its last argument when parsed to svgTree
+      circ(_) as @targer
 
-    shape tb1 Table {type= int, rows = 4, cols = 3 }
-    shape arr Array {type= int, len= 8, &with_index }
-
-    def ops {}
-    def delay 120ms
-    def degree 54deg
-    def number 66
-
-    ## everyThing that comes in animat
-    call Array.setPosition, arr, 130, 40
-
-    animate {delay = 200ms, executionPolicy = &parallel}:
-      call Array.setIndex, arr, 0, 4
-      call Array.setIndexVisibility, arr, off
+    embed """ # you can throw raw SVG by the way
+      <rect _/>
+    """
+    embed readfile "./assets/car.svg" # or embed external svg?
 
 
-    call delay 120ms
+  var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
-    macro set0 {num}:
-      call Array.setIndex, arr, 0, num
+  # kf: key frame
+  # type Progress = range[0.0 .. 100.0]
+  func mySuperCoolAnimation(
+    st: SvgTree, kfstart, kfend: SomeType, p: Progress = 0.0
+  ): SvgTree =
+    discard
 
-    
-    loop i =  1..5|2:
-      call set0, i
 
+  let
+    recording = show(stage):
+      before:
+        discard                             # do anything before starting animation
 
+                                            # flows can have args
+      flow reset:                           # a named flow
+        stage.remove @blocks[1]
+
+      stage 0.ms .. 100.ms:
+        # @box is a syntax suger for stage.components.box
+        let k = move(@box, (10.px, 100.px)) # define a keyframe
+
+        # register a transition
+        k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
+
+      at 130.ms:
+        reset()
+
+      stage 150.ms .. 200.ms:
+        scale(@blocks[0], 1.1).transition(dt, eCricleOut)
+
+      stage 170.ms .. 210.ms: # yes, stages can have innersects in timing
+                                # custom operator is cool
+        mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
+
+  recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
+      preview = 0.ms .. 1000.ms, repeat = 1)
