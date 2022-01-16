@@ -10,6 +10,8 @@ here, you code animations!
 4. https://github.com/jiro4989/svgo
 5. https://www.introbrand.com/
 
+svg tutorial: http://tutorials.jenkov.com/svg/index.html
+
 example: 
 ```nim
 
