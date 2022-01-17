@@ -5,18 +5,18 @@ macro inheritanceCase*(body): untyped =
   doAssert caseStmt.kind == nnkCaseStmt
 
   result = newNimNode(nnkIfStmt)
+  let target = caseStmt[CaseIdent]
 
   for branch in caseStmt[CaseBranches]:
     case branch.kind:
     of nnkOfBranch:
-      let
-        class = branch[CaseBranchIdent]
-        target = caseStmt[CaseIdent]
+      let classes = branch[CaseBranchIdents]
 
-      result.add newTree(
-        nnkElifBranch,
-        quote do: (`target` of `class`),
-        branch[CaseBranchBody])
+      for class in classes: # support for multi of `of 1, 2: `
+        result.add newTree(
+          nnkElifBranch,
+          quote do: (`target` of `class`),
+          branch[CaseBranchBody])
 
     of nnkElse:
       result.add branch
