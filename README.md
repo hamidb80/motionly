@@ -22,7 +22,7 @@ import algorithm, sequtils, ...
 
 genSVGTree stage(width=200, height=300):
   rect(fill= "#fff", ...) as @box # assign svg component to box variable
-  circ(fill= "#fff", ...) as @blocks[0] # as array
+  circle(fill= "#fff", ...) as @blocks[0] # as array
   line(...) # you don't need to store all components inside a variable
 
   group: # yes we have groups | we have everything in SVG
