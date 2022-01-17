@@ -87,74 +87,77 @@ type
   # IR :: Intermediate representation
   IRNode = object
     tag: string
-    attrs: Table[string, string]
+    attrs: seq[(string, string)]
     children: seq[IRNode]
 
-func IR2SvgNode(ir: IRNode): SVGNode =
-  case ir.tag:
-  of "rect":
-    discard
+func ast2IR(n: NimNode): NimNode =
+  assert n.kind in {nnkCall, nnkInfix}, $n.kind
 
-  of "circle":
-    discard
+  # of nnkInfix:
+  # assert node[InfixIdent].strVal == "as"
 
-  else:
-    discard
-    # custom ...
+  # let
+  #   component = node[InfixLeftSide]
+  #   alias = block:
+  #     let t = node[InfixRightSide]
+  #     assert t.kind == nnkPrefix
+  #     t[1].strval
 
-func ast2IR(n: NimNode): IRNode =
-  assert n.kind == nnkCall
-  result.tag = n[CallIdent].strVal
+
+  # if node[^1].kind == nnkStmtList: # has body
+  #   # parse its body first
+
+
+  let tag = n[CallIdent].strVal
+  var
+    attrs: seq[(string, string)]
+    children = newNimNode(nnkBracket)
 
   for arg in n[CallArgs]:
     case arg.kind:
-    of nnkExprEqExpr:
-      result.attrs[arg[0].strval] = arg[1].strVal
+    of nnkExprEqExpr: # args
+      attrs.add (arg[0].strval, arg[1].strVal)
 
-    of nnkStmtList:
-      result.children = arg.children.toseq.map(ast2IR)
+    of nnkStmtList: # body
+      children = arg.toseq.map(ast2IR).toBrackets
 
     else:
       error "invalid arg type: " & $arg.kind
 
+  result = quote:
+    `IRNode`(
+      tag: `tag`,
+      attrs: @`attrs`,
+      children: @`children`
+    )
 
-func toSVGTree(code: NimNode): NimNode =
-  # define object
-  # create IR
+func toSVGTree(wrapper, code: NimNode): NimNode =
+  assert wrapper.kind == nnkcall
 
+  debugEcho treeRepr wrapper
   debugEcho treeRepr code
 
-  var ir = IRNode(tag: "svg")
+  let
+    varname = wrapper[CallIdent]
+    args = toBrackets wrapper[CallArgs].mapIt do:
+      newTree(nnkTupleConstr, newStrLitNode(it[0].strval),
+        if it[1].kind in nnkLiterals: newStrLitNode repr it[1]
+        else: it[1]
+      )
 
-  for node in code:
-    case node.kind:
-    of nnkInfix:
-      # assert node[InfixIdent].strVal == "as"
+    brkt = code.toseq.map(ast2IR).toBrackets
 
-      # let
-      #   component = node[InfixLeftSide]
-      #   alias = block:
-      #     let t = node[InfixRightSide]
-      #     assert t.kind == nnkPrefix
-      #     t[1].strval
+  result = quote:
+    var `varname` = `IRNode`(
+      tag: "svg",
+      attrs: @`args`,
+      children: @`brkt`
+    )
 
+  # debugecho "--------------"
+  # debugecho treerepr result
+  # debugecho repr result
 
-      # if node[^1].kind == nnkStmtList: # has body
-      #   # parse its body first
-      #   discard
-
-      # then parse itself
-      discard
-
-    of nnkCall:
-      ir.children.add ast2IR(node)
-
-    else: discard
-
-  debugecho ir
-
-  return quote:
-    echo "no"
 
 macro genSVGTree*(stageVariable, body): untyped =
-  return toSVGTree(body)
+  return toSVGTree(stageVariable, body)

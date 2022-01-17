@@ -1,5 +1,10 @@
 import macros, macroplus
 
+func toBrackets*(sn: seq[NimNode]): NimNode =
+  result = newNimNode(nnkbracket)
+  for n in sn:
+    result.add n
+
 macro inheritanceCase*(body): untyped =
   let caseStmt = body[0]
   doAssert caseStmt.kind == nnkCaseStmt
