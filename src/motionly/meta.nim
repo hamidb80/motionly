@@ -5,6 +5,22 @@ func toBrackets*(sn: seq[NimNode]): NimNode =
   for n in sn:
     result.add n
 
+func exported*(identNode: NimNode): NimNode =
+  postfix(identnode, "*")
+
+func newObjectType*(
+  objName: NimNode, fields: seq[tuple[field: NimNode, `type`: NimNode]]
+): NimNode =
+  var
+    typeDef = newTree(nnkTypeDef, newEmptyNode(), newEmptyNode())
+    objectDef = newTree(nnkObjectTy, newEmptyNode(), newEmptyNode(), newTree(nnkRecList))
+
+  for fname, ftype in fields.items:
+    objectdef[^1].add newIdentDefs(fname, ftype)
+
+  typedef[0] = objName
+  result = newTree(nnkTypeSection, typeDef.add(objectDef))
+
 macro inheritanceCase*(body): untyped =
   let caseStmt = body[0]
   doAssert caseStmt.kind == nnkCaseStmt

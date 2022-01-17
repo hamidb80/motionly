@@ -1,6 +1,8 @@
-import std/[sequtils, strutils, strformat, tables]
+import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta]
+
+randomize()
 
 type
   Point* = object
@@ -32,6 +34,16 @@ type
   # of stPath:
   # of stTextPath:
   # if stPolygon, stPolyline
+
+  # IR :: Intermediate representation
+  IRNode = object
+    tag: string
+    attrs: seq[(string, string)]
+    children: seq[IRNode]
+
+  SVGStage* = ref object of RootObj
+    canvas*: SVGCanvas
+
 
 func genXmlElem(tag: string,
     attrs: Table[string, string],
@@ -65,6 +77,12 @@ method specialAttrs(n: SVGRect): Table[string, string] =
     "width": $n.width, "height": $n.height
   }.toTable
 
+func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
+  discard
+
+func findId*(n: SVGNode, id: string): SVGNode =
+  discard
+
 func `$`(n: SVGNode): string =
   let tag = inheritanceCase:
     case n:
@@ -76,19 +94,6 @@ func `$`(n: SVGNode): string =
   genXmlElem(tag, merge(specialAttrs(n), n.attrs),
     if n.kind == seWrapper: n.nodes.mapit($it).join
     else: "")
-
-let
-  c = SVGCircle(center: Point(x: 0.0, y: 1.1), radius: 3.0)
-  r = SVGRect(position: Point(x: 2.2, y: 3.3), width: 300, height: 500)
-  g = SVGGroup(nodes: @[c, r])
-
-# echo g
-type
-  # IR :: Intermediate representation
-  IRNode = object
-    tag: string
-    attrs: seq[(string, string)]
-    children: seq[IRNode]
 
 func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind
@@ -129,7 +134,7 @@ func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
       children: @`children`
     )
 
-func toSVGTree(stageConfig, code: NimNode): NimNode =
+proc toSVGTree(stageConfig, code: NimNode): NimNode =
   assert stageConfig.kind == nnkcall
 
   var idStore: seq[string]
@@ -144,15 +149,32 @@ func toSVGTree(stageConfig, code: NimNode): NimNode =
 
     children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
 
+  let 
+    # id = $rand(1 .. 9999)
+    id = "22"
+    cntx = ident "CustomComponents_" & id
+    cntxWrapper = exported(ident "CustomSVGStage_" & id)
+
+    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported, ident("SVGNode")))
+
   result = quote:
+    `objDef`
+
+    type
+      `cntxWrapper` = ref object of `SVGStage`
+        components*: `cntx`
+
     var `varname` = `IRNode`(
       tag: "svg",
       attrs: @`args`,
       children: @`children`
     )
 
-  debugecho "---------------"
-  debugecho idStore
+    ## TODO add search for ids
+
+  # debugecho "---------------"
+  # debugecho idStore
+  # debugecho repr result
 
 macro genSVGTree*(stageConfig, body): untyped =
   return toSVGTree(stageConfig, body)
