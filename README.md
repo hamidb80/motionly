@@ -20,7 +20,7 @@ example:
 import algorithm, sequtils, ...
 
 
-genSVGTree stage:
+genSVGTree stage(width=200, height=300):
   rect(fill= "#fff", ...) as @box # assign svg component to box variable
   circ(fill= "#fff", ...) as @blocks[0] # as array
   line(...) # you don't need to store all components inside a variable
@@ -76,7 +76,7 @@ let
       # custom operator is cool
       mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn) 
 
-recording.save("out.gif", 120.fps, size=(1000.px, 400.px), scale=5.0, preview = 0.ms .. 1000.ms, repeat= 1)
+recording.save("out.gif", 120.fps, scale=5.0, preview = 0.ms .. 1000.ms, repeat= 1)
 ```
 
 ## Goals:
