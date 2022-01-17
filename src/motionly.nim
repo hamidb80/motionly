@@ -85,23 +85,19 @@ let
 # echo g
 type
   # IR :: Intermediate representation
-  Path = seq[int]
-  PathStorage = seq[tuple[name: string, path: Path]]
-
   IRNode = object
     tag: string
     attrs: seq[(string, string)]
     children: seq[IRNode]
-    path: Path
 
-
-func ast2IR(n: NimNode, path: Path, storage: var PathStorage): NimNode =
+func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind
+  let hasId = n.kind == nnkInfix
   var targetNode = n
 
-  if n.kind == nnkInfix:
+  if hasId:
     assert n[InfixIdent].strVal == "as"
-    storage.add (n[InfixRightSide][1].strval, path)
+    storage.add n[InfixRightSide][1].strval
     targetNode = n[InfixLeftSide]
 
     if n.len == 4: # for named wrapper body
@@ -110,7 +106,10 @@ func ast2IR(n: NimNode, path: Path, storage: var PathStorage): NimNode =
   let tag = targetNode[CallIdent].strVal
   var
     attrs: seq[(string, string)]
-    children: seq[NimNode]
+    children = newNimNode(nnkBracket)
+
+  if hasId:
+    attrs.add ("id", storage[^1])
 
   for arg in targetNode[CallArgs]:
     case arg.kind:
@@ -118,24 +117,22 @@ func ast2IR(n: NimNode, path: Path, storage: var PathStorage): NimNode =
       attrs.add (arg[0].strval, arg[1].strVal)
 
     of nnkStmtList: # body
-      for i, it in arg.pairs:
-        children.add ast2IR(it, path.concat(@[i]), storage)
+      children = toBrackets arg.toseq.mapIt ast2IR(it, storage)
 
     else:
       error "invalid arg type: " & $arg.kind
 
-  let cb = toBrackets children
   result = quote:
     `IRNode`(
       tag: `tag`,
       attrs: @`attrs`,
-      children: @`cb`
+      children: @`children`
     )
 
 func toSVGTree(stageConfig, code: NimNode): NimNode =
   assert stageConfig.kind == nnkcall
 
-  var pstore: PathStorage
+  var idStore: seq[string]
   let
     varname = stageConfig[CallIdent]
     args = toBrackets stageConfig[CallArgs].mapIt newTree(
@@ -145,13 +142,7 @@ func toSVGTree(stageConfig, code: NimNode): NimNode =
       else: it[1]
     )
 
-    children = block:
-      var res: seq[NimNode]
-
-      for i, it in code.pairs:
-        res.add ast2IR(it, @[i], pstore)
-
-      toBrackets res
+    children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
 
   result = quote:
     var `varname` = `IRNode`(
@@ -161,7 +152,7 @@ func toSVGTree(stageConfig, code: NimNode): NimNode =
     )
 
   debugecho "---------------"
-  debugecho pstore
+  debugecho idStore
 
 macro genSVGTree*(stageConfig, body): untyped =
   return toSVGTree(stageConfig, body)
