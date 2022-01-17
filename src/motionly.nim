@@ -1,4 +1,65 @@
-import algorithm, sequtils
+import std/[sequtils, strutils, strformat, tables, macros]
+import motionly/[utils]
+
+type
+  Point* = object
+    x, y: float
+
+  SVGAbstractElemKind = enum
+    seWrapper, seShape
+
+  SVGNode* = ref object of RootObj
+    kind*: SVGAbstractElemKind
+    otherAttrs*, styles*: Table[string, string]
+    parent*: SVGNode
+    nodes*: seq[SVGNode]
+
+  SVGRect* = ref object of SVGNode
+    position*: Point
+    width*, height*: float
+
+  SVGCircle* = ref object of SVGNode
+    center*: Point
+    radius*: float
+
+    # stGroup, stDef
+    # of stText:
+    # of stLine:
+    # of stPath:
+    # of stTextPath:
+    # if stPolygon, stPolyline
+
+func genXmlElem(tag: string,
+    attrs: Table[string, string],
+    body: string = ""
+): string =
+  let ats = attrs.pairs.toseq.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "
+  fmt"<{tag} {ats}>{body}</{tag}>"
+
+method getPrivateAttrs(n: SVGNode): Table[string, string] {.base.} =
+  raise newException(ValueError, "trying to stringify empty SVGnode?")
+
+method getPrivateAttrs(n: SVGCircle): Table[string, string] =
+  {"cx": $n.center.x, "cy": $n.center.y, "r": $n.radius}.toTable
+
+method getPrivateAttrs(n: SVGRect): Table[string, string] =
+  {
+    "x": $n.position.x, "y": $n.position.y,
+    "width": $n.width, "height": $n.height
+  }.toTable
+
+func `$`(n: SVGNode): string =
+  let tag =
+    if n of SVGRect: "rect"
+    elif n of SVGCircle: "circle"
+    else: "??"
+
+  genXmlElem(tag, merge(getPrivateAttrs(n), n.otherAttrs), "")
+
+echo SVGCircle(kind: seShape, center: Point(x: 0.0, y: 1.1), radius: 3.0)
+
+func toSVGTree(code: NimNode): SVGNode =
+  discard
 
 when false:
   genSVGTree stage:
@@ -19,7 +80,7 @@ when false:
     """
     embed readfile "./assets/car.svg" # or embed external svg?
 
-
+when false:
   var mySpecialComponenetThatIForgot = stage.query(".class #id")
 
   # kf: key frame
@@ -34,7 +95,6 @@ when false:
     recording = show(stage):
       before:
         discard                             # do anything before starting animation
-
                                             # flows can have args
       flow reset:                           # a named flow
         stage.remove @blocks[1]
@@ -58,3 +118,4 @@ when false:
 
   recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
       preview = 0.ms .. 1000.ms, repeat = 1)
+

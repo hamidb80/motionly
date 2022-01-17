@@ -9,6 +9,8 @@ here, you code animations!
 3. https://github.com/bluenote10/NimSvg
 4. https://github.com/jiro4989/svgo
 5. https://www.introbrand.com/
+6. https://www.freecodecamp.org/news/svg-tutorial-learn-to-code-images/
+7. https://www.w3.org/TR/SVG2/conform.html#conformance-overview
 
 svg tutorial: http://tutorials.jenkov.com/svg/index.html
 
