@@ -156,7 +156,7 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
     cntxWrapper = ident "CustomSVGStage_" & id
     stageIdent = ident("IR_" & id)
 
-    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported, ident("SVGNode")))
+    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported, quote do: `SVGNode`))
 
   result = quote:
     `objDef`
@@ -173,6 +173,7 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
 
     var `varname`: `cntxWrapper`
 
+    ## TODO
     ## initStage + resolve components at runtime
     ## search for ids
 
