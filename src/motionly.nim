@@ -85,79 +85,83 @@ let
 # echo g
 type
   # IR :: Intermediate representation
+  Path = seq[int]
+  PathStorage = seq[tuple[name: string, path: Path]]
+
   IRNode = object
     tag: string
     attrs: seq[(string, string)]
     children: seq[IRNode]
+    path: Path
 
-func ast2IR(n: NimNode): NimNode =
+
+func ast2IR(n: NimNode, path: Path, storage: var PathStorage): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind
+  var targetNode = n
 
-  # of nnkInfix:
-  # assert node[InfixIdent].strVal == "as"
+  if n.kind == nnkInfix:
+    assert n[InfixIdent].strVal == "as"
+    storage.add (n[InfixRightSide][1].strval, path)
+    targetNode = n[InfixLeftSide]
 
-  # let
-  #   component = node[InfixLeftSide]
-  #   alias = block:
-  #     let t = node[InfixRightSide]
-  #     assert t.kind == nnkPrefix
-  #     t[1].strval
+    if n.len == 4: # for named wrapper body
+      targetNode.add n[3]
 
-
-  # if node[^1].kind == nnkStmtList: # has body
-  #   # parse its body first
-
-
-  let tag = n[CallIdent].strVal
+  let tag = targetNode[CallIdent].strVal
   var
     attrs: seq[(string, string)]
-    children = newNimNode(nnkBracket)
+    children: seq[NimNode]
 
-  for arg in n[CallArgs]:
+  for arg in targetNode[CallArgs]:
     case arg.kind:
     of nnkExprEqExpr: # args
       attrs.add (arg[0].strval, arg[1].strVal)
 
     of nnkStmtList: # body
-      children = arg.toseq.map(ast2IR).toBrackets
+      for i, it in arg.pairs:
+        children.add ast2IR(it, path.concat(@[i]), storage)
 
     else:
       error "invalid arg type: " & $arg.kind
 
+  let cb = toBrackets children
   result = quote:
     `IRNode`(
       tag: `tag`,
       attrs: @`attrs`,
-      children: @`children`
+      children: @`cb`
     )
 
-func toSVGTree(wrapper, code: NimNode): NimNode =
-  assert wrapper.kind == nnkcall
+func toSVGTree(stageConfig, code: NimNode): NimNode =
+  assert stageConfig.kind == nnkcall
 
-  debugEcho treeRepr wrapper
-  debugEcho treeRepr code
-
+  var pstore: PathStorage
   let
-    varname = wrapper[CallIdent]
-    args = toBrackets wrapper[CallArgs].mapIt do:
-      newTree(nnkTupleConstr, newStrLitNode(it[0].strval),
-        if it[1].kind in nnkLiterals: newStrLitNode repr it[1]
-        else: it[1]
-      )
+    varname = stageConfig[CallIdent]
+    args = toBrackets stageConfig[CallArgs].mapIt newTree(
+      nnkTupleConstr,
+      newStrLitNode(it[0].strval),
+      if it[1].kind in nnkLiterals: newStrLitNode repr it[1]
+      else: it[1]
+    )
 
-    brkt = code.toseq.map(ast2IR).toBrackets
+    children = block:
+      var res: seq[NimNode]
+
+      for i, it in code.pairs:
+        res.add ast2IR(it, @[i], pstore)
+
+      toBrackets res
 
   result = quote:
     var `varname` = `IRNode`(
       tag: "svg",
       attrs: @`args`,
-      children: @`brkt`
+      children: @`children`
     )
 
-  # debugecho "--------------"
-  # debugecho treerepr result
-  # debugecho repr result
+  debugecho "---------------"
+  debugecho pstore
 
-
-macro genSVGTree*(stageVariable, body): untyped =
-  return toSVGTree(stageVariable, body)
+macro genSVGTree*(stageConfig, body): untyped =
+  return toSVGTree(stageConfig, body)
