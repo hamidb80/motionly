@@ -2,7 +2,7 @@ import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta]
 
-randomize()
+# randomize()
 
 type
   Point* = object
@@ -150,10 +150,11 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
     children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
 
   let 
-    # id = $rand(1 .. 9999)
+    # id = $rand(1 .. 9999) # FIXME
     id = "22"
     cntx = ident "CustomComponents_" & id
-    cntxWrapper = exported(ident "CustomSVGStage_" & id)
+    cntxWrapper = ident "CustomSVGStage_" & id
+    stageIdent = ident("IR_" & id)
 
     objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported, ident("SVGNode")))
 
@@ -161,20 +162,22 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
     `objDef`
 
     type
-      `cntxWrapper` = ref object of `SVGStage`
+      `cntxWrapper`* = ref object of `SVGStage`
         components*: `cntx`
 
-    var `varname` = `IRNode`(
+    let `stageIdent` = `IRNode`(
       tag: "svg",
       attrs: @`args`,
       children: @`children`
     )
 
-    ## TODO add search for ids
+    var `varname`: `cntxWrapper`
 
-  # debugecho "---------------"
-  # debugecho idStore
-  # debugecho repr result
+    ## initStage + resolve components at runtime
+    ## search for ids
+
+  debugecho "---------------"
+  debugecho repr result
 
 macro genSVGTree*(stageConfig, body): untyped =
   return toSVGTree(stageConfig, body)
