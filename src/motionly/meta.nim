@@ -11,6 +11,10 @@ func toStmtList*(sn: seq[NimNode]): NimNode =
   for n in sn:
     result.add n
 
+func toStrLitOrIdent*(n: NimNode): NimNode = 
+  if n.kind in nnkLiterals: newStrLitNode repr n
+  else: n
+
 func exported*(identNode: NimNode): NimNode =
   postfix(identnode, "*")
 
