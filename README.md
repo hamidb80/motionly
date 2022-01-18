@@ -11,6 +11,7 @@ here, you code animations!
 5. https://www.introbrand.com/
 6. https://www.freecodecamp.org/news/svg-tutorial-learn-to-code-images/
 7. https://www.w3.org/TR/SVG2/conform.html#conformance-overview
+8. https://stackoverflow.com/questions/9853325/how-to-convert-a-svg-to-a-png-with-imagemagick
 
 svg tutorial: http://tutorials.jenkov.com/svg/index.html
 
