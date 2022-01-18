@@ -1,121 +1,9 @@
 import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
-import motionly/[utils, meta]
+import motionly/[utils, meta, types, ir]
 
+export ir
 # randomize()
-
-type
-  Point* = object
-    x*, y*: float
-
-  SVGAbstractElemKind* = enum
-    seWrapper, seShape
-
-  SVGNode* = ref object of RootObj
-    attrs*, styles*: Table[string, string]
-    parent*: SVGNode
-    nodes*: seq[SVGNode]
-
-  SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
-    width, height: float
-
-  SVGGroup* = ref object of SVGNode
-
-  SVGRect* = ref object of SVGNode
-    position*: Point
-    width*, height*: float
-
-  SVGCircle* = ref object of SVGNode
-    center*: Point
-    radius*: float
-
-  # stGroup, stDef
-  # of stText:
-  # of stLine:
-  # of stPath:
-  # of stTextPath:
-  # if stPolygon, stPolyline
-
-  # IR :: Intermediate representation
-  IRNode = object
-    tag: string
-    attrs: seq[(string, string)]
-    children: seq[IRNode]
-
-  SVGStage* = ref object of RootObj
-    canvas*: SVGCanvas
-
-  IRParser* = proc(
-    attrs: seq[(string, string)], children: seq[SVGNode]
-  ): SVGNode {.nimcall.}
-
-  ParserMap* = Table[string, IRParser] # tag name => parser func
-
-func parseRect*(attrs: seq[(string, string)], children: seq[SVGNode]): SVGNode =
-  var acc = SVGRect()
-
-  for (key, val) in attrs:
-    case key:
-    of "x": acc.position.x = parseFloat val
-    of "y": acc.position.y = parseFloat val
-    of "width": acc.width = parseFloat val
-    of "height": acc.height = parseFloat val
-    else:
-      acc.attrs[key] = val
-
-  acc
-
-func parseCircle*(attrs: seq[(string, string)], children: seq[SVGNode]): SVGNode =
-  var acc = SVGCircle()
-
-  for (key, val) in attrs:
-    case key:
-    of "cx": acc.center.x = parseFloat val
-    of "cy": acc.center.y = parseFloat val
-    of "r": acc.radius = parseFloat val
-    else:
-      acc.attrs[key] = val
-
-  acc
-  
-# let 
-
-let baseParserMap*: ParserMap = toTable {
-  "rect": parseRect,
-  "circle": parseCircle
-}
-
-func genXmlElem(tag: string,
-    attrs: Table[string, string],
-    body: string = ""
-): string =
-  let ats = attrs.pairs.toseq.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "
-
-  if body.len == 0:
-    fmt"<{tag} {ats}/>"
-
-  else:
-    fmt"<{tag} {ats}>{body}</{tag}>"
-
-func kind(n: SVGNode): SVGAbstractElemKind =
-  inheritanceCase:
-    case n:
-    of SVGGroup, SVGCanvas: seWrapper
-    else: seShape
-
-method specialAttrs(n: SVGNode): Table[string, string] {.base.} = discard
-
-method specialAttrs(n: SVGCanvas): Table[string, string] =
-  {"width": $n.width, "height": $n.height}.toTable
-
-method specialAttrs(n: SVGCircle): Table[string, string] =
-  {"cx": $n.center.x, "cy": $n.center.y, "r": $n.radius}.toTable
-
-method specialAttrs(n: SVGRect): Table[string, string] =
-  {
-    "x": $n.position.x, "y": $n.position.y,
-    "width": $n.width, "height": $n.height
-  }.toTable
 
 func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
   discard
@@ -127,34 +15,21 @@ proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
   let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
 
   if ir.tag in parserMap:
-    result = parserMap[ir.tag](ir.attrs, nodes)
+    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
   else:
     raise newException(ValueError, "no such parser for tag name: " & ir.tag)
 
 proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
   let attrs = toTable ir.attrs
   assert attrs.containsAll ["width", "height"]
-  
+
   result = SVGCanvas(
+    name: "svg",
     width: attrs["width"].parseFloat,
     height: attrs["height"].parseFloat,
   )
 
   result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
-
-
-func `$`*(n: SVGNode): string =
-  let tag = inheritanceCase:
-    case n:
-    of SVGRect: "rect"
-    of SVGCircle: "circle"
-    of SVGGroup: "g"
-    of SVGCanvas: "svg"
-    else: "??"
-
-  genXmlElem(tag, merge(specialAttrs(n), n.attrs),
-    if n.kind == seWrapper: n.nodes.mapit($it).join
-    else: "")
 
 func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind
@@ -245,5 +120,7 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   debugecho "---------------"
   debugecho repr result
 
-macro genSVGTree*(stageConfig: untyped, parserMap: typed, body: untyped): untyped =
-  return toSVGTree(stageConfig, parserMap,body)
+macro genSVGTree*(
+  stageConfig: untyped, parserMap: typed, body: untyped
+): untyped =
+  return toSVGTree(stageConfig, parserMap, body)
