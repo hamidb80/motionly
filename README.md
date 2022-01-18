@@ -13,7 +13,9 @@ here, you code animations!
 7. https://www.w3.org/TR/SVG2/conform.html#conformance-overview
 8. https://stackoverflow.com/questions/9853325/how-to-convert-a-svg-to-a-png-with-imagemagick
 
-svg tutorial: http://tutorials.jenkov.com/svg/index.html
+**useful links**:
+* [svg tutorial](http://tutorials.jenkov.com/svg/index.html)
+* [how to save svg to png](https://imagemagick.org/script/command-line-processing.php)
 
 example: 
 ```nim

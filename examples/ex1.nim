@@ -3,16 +3,13 @@ import motionly
 const posx = 10
 
 genSVGTree stage(width = 200, height = 200), baseParserMap:
-  # rect(fill = "#fff")
-  # circle(fill = "#fff")
-
   group(x = posx) as @myGroup:
     arc() as @myArc
 
-  # rect(fill = "#fff") as @box # assign svg component to box variable
+  # rect(fill = "#fff")
   # circle(fill = "#fff") as @blocks[0] # as array
 
-  # myComponent("arg1", injected_here) as @table: # yay, custom component
+  # myComponent() as @table: # yay, custom component
   #   # your custom component can have slots like vue-js
   #   # the slot injected as its last argument when parsed to svgTree
   #   circ() as @targer
