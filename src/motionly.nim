@@ -17,6 +17,7 @@ type
     nodes*: seq[SVGNode]
 
   SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
+    width, height: float
 
   SVGGroup* = ref object of SVGNode
 
@@ -44,6 +45,45 @@ type
   SVGStage* = ref object of RootObj
     canvas*: SVGCanvas
 
+  IRParser* = proc(
+    attrs: seq[(string, string)], children: seq[SVGNode]
+  ): SVGNode {.nimcall.}
+
+  ParserMap* = Table[string, IRParser] # tag name => parser func
+
+func parseRect*(attrs: seq[(string, string)], children: seq[SVGNode]): SVGNode =
+  var acc = SVGRect()
+
+  for (key, val) in attrs:
+    case key:
+    of "x": acc.position.x = parseFloat val
+    of "y": acc.position.y = parseFloat val
+    of "width": acc.width = parseFloat val
+    of "height": acc.height = parseFloat val
+    else:
+      acc.attrs[key] = val
+
+  acc
+
+func parseCircle*(attrs: seq[(string, string)], children: seq[SVGNode]): SVGNode =
+  var acc = SVGCircle()
+
+  for (key, val) in attrs:
+    case key:
+    of "cx": acc.center.x = parseFloat val
+    of "cy": acc.center.y = parseFloat val
+    of "r": acc.radius = parseFloat val
+    else:
+      acc.attrs[key] = val
+
+  acc
+  
+# let 
+
+let baseParserMap*: ParserMap = toTable {
+  "rect": parseRect,
+  "circle": parseCircle
+}
 
 func genXmlElem(tag: string,
     attrs: Table[string, string],
@@ -60,13 +100,13 @@ func genXmlElem(tag: string,
 func kind(n: SVGNode): SVGAbstractElemKind =
   inheritanceCase:
     case n:
-    of SVGGroup: seWrapper
+    of SVGGroup, SVGCanvas: seWrapper
     else: seShape
 
-method specialAttrs(n: SVGNode): Table[string, string] {.base.} =
-  raise newException(ValueError, "trying to stringify empty SVGnode?")
+method specialAttrs(n: SVGNode): Table[string, string] {.base.} = discard
 
-method specialAttrs(n: SVGGroup): Table[string, string] = discard
+method specialAttrs(n: SVGCanvas): Table[string, string] =
+  {"width": $n.width, "height": $n.height}.toTable
 
 method specialAttrs(n: SVGCircle): Table[string, string] =
   {"cx": $n.center.x, "cy": $n.center.y, "r": $n.radius}.toTable
@@ -83,12 +123,33 @@ func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
 func findId*(n: SVGNode, id: string): SVGNode =
   discard
 
-func `$`(n: SVGNode): string =
+proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
+  let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
+
+  if ir.tag in parserMap:
+    result = parserMap[ir.tag](ir.attrs, nodes)
+  else:
+    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
+
+proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
+  let attrs = toTable ir.attrs
+  assert attrs.containsAll ["width", "height"]
+  
+  result = SVGCanvas(
+    width: attrs["width"].parseFloat,
+    height: attrs["height"].parseFloat,
+  )
+
+  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
+
+
+func `$`*(n: SVGNode): string =
   let tag = inheritanceCase:
     case n:
     of SVGRect: "rect"
     of SVGCircle: "circle"
     of SVGGroup: "g"
+    of SVGCanvas: "svg"
     else: "??"
 
   genXmlElem(tag, merge(specialAttrs(n), n.attrs),
@@ -134,7 +195,7 @@ func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
       children: @`children`
     )
 
-proc toSVGTree(stageConfig, code: NimNode): NimNode =
+proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   assert stageConfig.kind == nnkcall
 
   var idStore: seq[string]
@@ -149,14 +210,20 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
 
     children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
 
-  let 
+  let
     # id = $rand(1 .. 9999) # FIXME
     id = "22"
     cntx = ident "CustomComponents_" & id
     cntxWrapper = ident "CustomSVGStage_" & id
     stageIdent = ident("IR_" & id)
 
-    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported, quote do: `SVGNode`))
+    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported,
+        quote do: `SVGNode`))
+
+    idGets = toStmtList idStore.mapit do:
+      let field = ident it
+      quote:
+        `varname`.components.`field` = findId(`varname`.canvas, `it`)
 
   result = quote:
     `objDef`
@@ -171,14 +238,12 @@ proc toSVGTree(stageConfig, code: NimNode): NimNode =
       children: @`children`
     )
 
-    var `varname`: `cntxWrapper`
-
-    ## TODO
-    ## initStage + resolve components at runtime
-    ## search for ids
+    var `varname` = `cntxWrapper`()
+    `varname`.canvas = `parseIR`(`stageIdent`, `parserMap`)
+    `idGets`
 
   debugecho "---------------"
   debugecho repr result
 
-macro genSVGTree*(stageConfig, body): untyped =
-  return toSVGTree(stageConfig, body)
+macro genSVGTree*(stageConfig: untyped, parserMap: typed, body: untyped): untyped =
+  return toSVGTree(stageConfig, parserMap,body)

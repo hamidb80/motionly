@@ -5,6 +5,12 @@ func toBrackets*(sn: seq[NimNode]): NimNode =
   for n in sn:
     result.add n
 
+func toStmtList*(sn: seq[NimNode]): NimNode = 
+  result = newStmtList()
+
+  for n in sn:
+    result.add n
+
 func exported*(identNode: NimNode): NimNode =
   postfix(identnode, "*")
 
