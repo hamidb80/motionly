@@ -1,22 +1,12 @@
 import motionly
 
-when false:
-  type
-    SVGStage* = ref object of RootObj
-      canvas*: SVGCanvas
-
-    CustomComponents_21* = object
-      box*: SVGNode
-      blocks*: seq[SvgNode]
-
-    CustomSVGStage_21* = ref object of SVGStage
-      components*: CustomComponents_21
+const posx = 10
 
 genSVGTree stage(width = 200, height = 200), baseParserMap:
   # rect(fill = "#fff")
   # circle(fill = "#fff")
 
-  group() as @myGroup:
+  group(x = posx) as @myGroup:
     arc() as @myArc
 
   # rect(fill = "#fff", _) as @box # assign svg component to box variable

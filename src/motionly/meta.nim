@@ -5,15 +5,18 @@ func toBrackets*(sn: seq[NimNode]): NimNode =
   for n in sn:
     result.add n
 
-func toStmtList*(sn: seq[NimNode]): NimNode = 
+func toStmtList*(sn: seq[NimNode]): NimNode =
   result = newStmtList()
 
   for n in sn:
     result.add n
 
-func toStrLitOrIdent*(n: NimNode): NimNode = 
+func toStringNode*(n: NimNode): NimNode =
   if n.kind in nnkLiterals: newStrLitNode repr n
-  else: n
+  else: newCall("$", n)
+
+func toTupleNode*(sn: varargs[NimNode]): NimNode =
+  newTree(nnkTupleConstr, sn)
 
 func exported*(identNode: NimNode): NimNode =
   postfix(identnode, "*")

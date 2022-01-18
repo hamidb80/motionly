@@ -53,16 +53,16 @@ func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
 
   let tag = targetNode[CallIdent].strVal
   var
-    attrs: seq[(string, string)]
+    attrs = newNimNode(nnkBracket)
     children = newNimNode(nnkBracket)
 
   if hasId:
-    attrs.add ("id", storage[^1])
+    attrs.add toTupleNode(newStrLitNode("id"), storage[^1].newStrLitNode)
 
   for arg in targetNode[CallArgs]:
     case arg.kind:
     of nnkExprEqExpr: # args
-      attrs.add (arg[0].strval, arg[1].strVal) # FIXME it's not dynamic | toStrLitOrIdent
+      attrs.add toTupleNode(arg[0].strval.newStrLitNode, arg[1].toStringNode)
 
     of nnkStmtList: # body
       children = toBrackets arg.toseq.mapIt ast2IR(it, storage)
@@ -86,7 +86,7 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     args = toBrackets stageConfig[CallArgs].mapIt newTree(
       nnkTupleConstr,
       it[0].strval.newStrLitNode,
-      it[1].toStrLitOrIdent
+      it[1].toStringNode
     )
 
     children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
