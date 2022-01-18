@@ -1,15 +1,9 @@
-import std/[sequtils, strutils, strformat, tables, random]
+import std/[sequtils, strutils, tables, random]
 import macros, macroplus
 import motionly/[utils, meta, types, ir]
 
 export ir
 # randomize()
-
-func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
-  discard
-
-func findId*(n: SVGNode, id: string): SVGNode =
-  discard
 
 proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
   let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
@@ -30,6 +24,19 @@ proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
   )
 
   result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
+
+func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
+  if n.attrs.getOrDefault("id", "") == id:
+    result = n
+  else:
+    for c in n.nodes:
+      findIdImpl(c, id, result)
+
+func findId*(n: SVGNode, id: string): SVGNode =
+  findIdImpl(n, id, result)
+
+  if result == nil:
+    raise newException(ValueError, "no such elem with id: " & id)
 
 func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind

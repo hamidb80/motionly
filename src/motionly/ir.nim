@@ -47,7 +47,7 @@ let baseParserMap*: ParserMap = toTable {
   "rect": parseRect,
   "circle": parseCircle,
   "arc": parseRaw[SVGArc],
-  "group": parseRaw[SVGGroup],
+  "group": parseRaw[SVGGroup], # FIXME: "group" is not a tag name, use "g" instead 
   "g": parseRaw[SVGGroup],
 }
 
