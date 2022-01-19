@@ -132,14 +132,14 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
         field = fname.ident
 
       if it[1].isseq:
-        var res = newStmtList()
-        
+        var res = newTree(nnkBracket)
         for i in 0 ..< it[1].count:
           let iname = fmt"{fname}_{i}"
           res.add quote do:
-            `varname`.components.`field`.add findId(`varname`.canvas, `iname`)
+            findId(`varname`.canvas, `iname`)
 
-        res
+        quote:
+          `varname`.components.`field` = @`res`
 
       else:
         quote:
