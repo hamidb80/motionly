@@ -53,22 +53,27 @@ when false:
   defShow recording, stage:
     before:
       discard
-    
+
+    # flows are just procs
     flow reset:
       stage.remove @blocks[1]
 
+    # 'stage's are procs that are also stored in the timeline
+    # the entities in timeline are sorted based on their start time
     stage 0.ms .. 100.ms:
-      let k = move(@box, (10.px, 100.px))
+      let k = move(@box, P(10.px, 100.px))
       k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
 
-    at 130.ms:
+    # 'at's are just a stage that it's time range is t..t
+    at 130.ms: 
       reset()
 
     stage 150.ms .. 200.ms:
       scale(@blocks[0], 1.1).transition(dt, eCricleOut)
+      scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
 
-    stage 170.ms .. 210.ms: 
-      mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
+    # stage 170.ms .. 210.ms:
+    #   mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
 
   # recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
     # preview = 0.ms .. 1000.ms, repeat = 1)
