@@ -1,5 +1,7 @@
 import tables
 
+# TODO use `strtabs` instead of `tables
+
 type
   SVGNode* = ref object of RootObj
     name*: string
@@ -42,7 +44,18 @@ type
   Point* = object
     x*, y*: float
 
-  TimeLine* = seq[tuple[timeRange: HSlice[int, int], fn: proc()]]
+  Percent* = range[0.0 .. 100.0]
+
+  KeyFrame* = tuple[timeRange: HSlice[int, int], fn: proc() {.nimcall.}]
+  TimeLine* = seq[KeyFrame]
+
+  State* = ref object of RootObj
+
+  Transition* = object
+    easingFn*: proc(total, elapsed: float): Percent
+    actionFn*: proc(n: SVGNode, states: tuple[first, last: State],
+        progress: Percent): SVGNode
+
 
 func P*(x, y: float): Point =
   Point(x: x, y: y)
@@ -50,4 +63,5 @@ func P*(x, y: float): Point =
 func px*(n: int): float =
   n.toFloat
 
-func ms*(n: int): int = n
+func ms*(n: int): int = 
+  n

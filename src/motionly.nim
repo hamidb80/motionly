@@ -1,44 +1,8 @@
-import std/[sequtils, strutils, strformat, tables, random]
+import std/[sequtils, strutils, strformat, tables]
 import macros, macroplus
-import motionly/[utils, meta, types, ir]
+import motionly/[meta, types, ir, logic]
 
-# TODO use `strtabs` instead of `tables
-
-export ir, types
-# randomize()
-
-proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
-  let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
-
-  if ir.tag in parserMap:
-    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
-  else:
-    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
-
-proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
-  let attrs = toTable ir.attrs
-  assert attrs.containsAll ["width", "height"]
-
-  result = SVGCanvas(
-    name: "svg",
-    width: attrs["width"].parseFloat,
-    height: attrs["height"].parseFloat,
-  )
-
-  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
-
-func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
-  if n.attrs.getOrDefault("id", "") == id:
-    result = n
-  else:
-    for c in n.nodes:
-      findIdImpl(c, id, result)
-
-func findId*(n: SVGNode, id: string): SVGNode =
-  findIdImpl(n, id, result)
-
-  if result == nil:
-    raise newException(ValueError, "no such elem with id: " & id)
+export ir, types, logic
 
 func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind
@@ -199,39 +163,44 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
     hasBefore = false
 
   for i, entity in body:
+    template addTimeline(what2add): untyped {.dirty.} =
+      entity.expectLen(3)
+      let stgName = ident fmt"keyframes_{i}"
+      procDefs.add newProc(stgName, body = newBody)
+      timelineIR.add (what2add, stgName)
+
+
     case entity.kind:
     of nnkCommand, nnkCall:
       let
         name = entity[CommandIdent].strVal
         newBody = replaceStageComponents(stageVar, entity[CommandBody])
 
-      # TODO name mangeling
       case name:
       of "before":
-        # TODO add before to behavoirs
         procDefs.add newProc("before".ident, body = newBody)
         hasBefore = true
 
       # of "flow":
       #   discard newProc(body= newBody)
 
-      of "stage":
-        entity.expectLen(3)
-        let stgName = ident fmt"stage_{i}"
-        procDefs.add newProc(stgName, body = newBody)
-        timelineIR.add (entity[1], stgName)
+      of "keyframes":
+        addTimeline entity[1]
 
-      # of "at":
+      of "at":
+        addTimeline infix(entity[1], "..", entity[1])
+
       else:
         error "invalid entity name: " & name
 
     else:
       error "not valid entity kind: " & $entity.kind
 
-
+  let tb = toBrackets timelineIR.mapIt toTupleNode(it[0], it[1])
   result = quote:
     `procDefs`
-    var timeline: `TimeLine` = @`timelineIR`
+    var timeline: `TimeLine` = @`tb`
+    timeline.sort
 
   debugEcho "++++++++++++++"
   debugEcho repr result
