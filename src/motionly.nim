@@ -2,7 +2,7 @@ import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta, types, ir]
 
-# FIXME use `strtabs` instead of `tables
+# TODO use `strtabs` instead of `tables
 
 export ir, types
 # randomize()
@@ -42,7 +42,7 @@ func findId*(n: SVGNode, id: string): SVGNode =
 
 func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind
-  let 
+  let
     hasId = n.kind == nnkInfix
     isComponent = n.kind in {nnkCall, nnkInfix}
   var
@@ -126,7 +126,7 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     cntxWrapper = ident "CustomSVGStage_" & id
     stageIdent = ident("IR_" & id)
 
-    objDef = newObjectType(cntx.exported, idStore.pairs.toseq.mapIt do:(
+    objDef = newObjectType(cntx.exported, idStore.pairs.toseq.mapIt do: (
       it[0].ident.exported,
       if it[1].isSeq:
         newTree(nnkBracketExpr, ident"seq", quote do: `SVGNode`)
@@ -180,26 +180,61 @@ macro defStage*(
 
 # ----------------------------------------------------------
 
-# type
+func replaceStageComponents*(stageVar, body: NimNode): NimNode =
+  result = body
 
+  for i, n in body.pairs:
+    if n.kind == nnkPrefix and n[0].strval == "@":
+      let componentName = n[1]
+      result[i] = quote:
+        `stageVar`.components.`componentName`
 
-func showImpl(stageVar, body: NimNode): NimNode =
-  for entity in body:
+    else:
+      result[i] = replaceStageComponents(stagevar, n)
+
+func defShowImpl(stageVar, body: NimNode): NimNode =
+  var
+    timelineIR: seq[tuple[timeRange, fn: NimNode]]
+    procDefs = newStmtList()
+    hasBefore = false
+
+  for i, entity in body:
     case entity.kind:
-    of nnkCall:
-      let name = entity[0].strVal
+    of nnkCommand, nnkCall:
+      let
+        name = entity[CommandIdent].strVal
+        newBody = replaceStageComponents(stageVar, entity[CommandBody])
 
+      # TODO name mangeling
       case name:
       of "before":
-        discard
-      # of "at":
-      # of "stage":
+        # TODO add before to behavoirs
+        procDefs.add newProc("before".ident, body = newBody)
+        hasBefore = true
+
       # of "flow":
+      #   discard newProc(body= newBody)
+
+      of "stage":
+        entity.expectLen(3)
+        let stgName = ident fmt"stage_{i}"
+        procDefs.add newProc(stgName, body = newBody)
+        timelineIR.add (entity[1], stgName)
+
+      # of "at":
       else:
         error "invalid entity name: " & name
 
     else:
       error "not valid entity kind: " & $entity.kind
 
+
+  result = quote:
+    `procDefs`
+    var timeline: `TimeLine` = @`timelineIR`
+
+  debugEcho "++++++++++++++"
+  debugEcho repr result
+
 macro defShow*(showVar: untyped, stageVar: typed, body): untyped =
-  showImpl(stageVar, body)
+  defShowImpl(stageVar, body)

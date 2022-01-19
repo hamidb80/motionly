@@ -1,9 +1,6 @@
 import tables
 
 type
-  Point* = object
-    x*, y*: float
-
   SVGNode* = ref object of RootObj
     name*: string
     attrs*, styles*: Table[string, string]
@@ -41,3 +38,16 @@ type
   ParserMap* = Table[string, IRParser] # tag name => parser func
 
   ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
+
+  Point* = object
+    x*, y*: float
+
+  TimeLine* = seq[tuple[timeRange: HSlice[int, int], fn: proc()]]
+
+func P*(x, y: float): Point =
+  Point(x: x, y: y)
+
+func px*(n: int): float =
+  n.toFloat
+
+func ms*(n: int): int = n
