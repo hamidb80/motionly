@@ -173,7 +173,33 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   debugecho "---------------"
   debugecho repr result
 
-macro genSVGTree*(
+macro defStage*(
   stageConfig: untyped, parserMap: typed, body: untyped
 ): untyped =
   return toSVGTree(stageConfig, parserMap, body)
+
+# ----------------------------------------------------------
+
+# type
+
+
+func showImpl(stageVar, body: NimNode): NimNode =
+  for entity in body:
+    case entity.kind:
+    of nnkCall:
+      let name = entity[0].strVal
+
+      case name:
+      of "before":
+        discard
+      # of "at":
+      # of "stage":
+      # of "flow":
+      else:
+        error "invalid entity name: " & name
+
+    else:
+      error "not valid entity kind: " & $entity.kind
+
+macro defShow*(showVar: untyped, stageVar: typed, body): untyped =
+  showImpl(stageVar, body)

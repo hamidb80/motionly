@@ -27,7 +27,7 @@ let ff = baseParserMap.dup update totable {
   "myComponent": parseMyComponent
 }
 
-genSVGTree stage(width = 200, height = 200), ff:
+defStage stage(width = 200, height = 200), ff:
   # group(x = posx) as @myGroup:
   #   arc() as @myArc
 
@@ -50,18 +50,15 @@ when false:
   # ): SvgTree =
   #   discard
 
-  let recording = show(stage):
+  defShow recording, stage:
     before:
       discard
     
-    # flow reset:
-    #   stage.remove @blocks[1]
+    flow reset:
+      stage.remove @blocks[1]
 
     stage 0.ms .. 100.ms:
-      # @box is a syntax suger for stage.components.box
-      let k = move(@box, (10.px, 100.px)) # define a keyframe
-
-        # register a transition
+      let k = move(@box, (10.px, 100.px))
       k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
 
     at 130.ms:
@@ -70,8 +67,7 @@ when false:
     stage 150.ms .. 200.ms:
       scale(@blocks[0], 1.1).transition(dt, eCricleOut)
 
-    stage 170.ms .. 210.ms: # yes, stages can have innersects in timing
-                              # custom operator is cool
+    stage 170.ms .. 210.ms: 
       mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
 
   # recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
