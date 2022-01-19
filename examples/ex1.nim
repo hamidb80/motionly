@@ -20,7 +20,7 @@ func parseMyComponent*(
 
   acc
 
-var ff = baseParserMap.dup update totable {
+let ff = baseParserMap.dup update totable {
   "myComponent": parseMyComponent
 }
 
@@ -39,10 +39,10 @@ genSVGTree stage(width = 200, height = 200), ff:
   # myComponent() as @myc: # yay, custom component
   #   circle()
 
-  embed """ # you can throw raw SVG by the way
+  embed """ 
     <rect _/>
   """
-  # embed readfile "./assets/car.svg" # or embed external svg?
+  # embed readfile "./assets/car.svg"
 
 echo stage.canvas
 # echo "----------"
