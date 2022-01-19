@@ -1,14 +1,17 @@
-import motionly,tables, sugar
+import motionly, tables, sugar
 
 const posx = 10
 
-func update[K, V](t1: var Table[K,V], t2: Table[K,V]) =
-  for k,v in t2:
+func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
+  for k, v in t2:
     t1[k] = v
 
-type 
+type
   MyComponent = ref object of SVGNode
     isThatTrue: bool
+
+method specialAttrs(n: MyComponent): Table[string, string] =
+  result["style"] = "display: none"
 
 func parseMyComponent*(
   tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
@@ -24,12 +27,7 @@ let ff = baseParserMap.dup update totable {
   "myComponent": parseMyComponent
 }
 
-method specialAttrs(n: MyComponent):  Table[string, string] =
-  result["style"] = "display: none"
-
 genSVGTree stage(width = 200, height = 200), ff:
-  rect()
-
   # group(x = posx) as @myGroup:
   #   arc() as @myArc
 
@@ -42,24 +40,22 @@ genSVGTree stage(width = 200, height = 200), ff:
   embed """ 
     <rect />
   """
-  embed readfile "./assets/atom.svg"
+  # embed readfile "./assets/atom.svg"
 
 echo stage.canvas
-# echo "----------"
-# echo stage.components.myArc
 
 when false:
-  func mySuperCoolAnimation(
-    st: SvgTree, kfstart, kfend: SomeType, p: Progress = 0.0
-  ): SvgTree =
-    discard
+  # func mySuperCoolAnimation(
+  #   st: SvgTree, kfstart, kfend: SomeType, p: Progress = 0.0
+  # ): SvgTree =
+  #   discard
 
   let recording = show(stage):
     before:
-      discard                             # do anything before starting animation
-                                          # flows can have args
-    flow reset:                           # a named flow
-      stage.remove @blocks[1]
+      discard
+    
+    # flow reset:
+    #   stage.remove @blocks[1]
 
     stage 0.ms .. 100.ms:
       # @box is a syntax suger for stage.components.box
@@ -78,5 +74,5 @@ when false:
                               # custom operator is cool
       mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
 
-  recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
-      preview = 0.ms .. 1000.ms, repeat = 1)
+  # recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
+    # preview = 0.ms .. 1000.ms, repeat = 1)
