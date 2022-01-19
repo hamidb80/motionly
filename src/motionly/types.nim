@@ -50,11 +50,17 @@ type
   TimeLine* = seq[KeyFrame]
 
   State* = ref object of RootObj
+  Switch* = HSlice[State, State]
+
+  UpdateAgent* = object
+    node*: SVGNode
+    states*: Switch
+    fn*: proc(n: SVGNode, states: Switch, progress: Percent): SVGNode {.nimcall.}
 
   Transition* = object
-    easingFn*: proc(total, elapsed: float): Percent
-    actionFn*: proc(n: SVGNode, states: tuple[first, last: State],
-        progress: Percent): SVGNode
+    totalTime*: int
+    easingFn*: proc(total, elapsed: float): Percent {.nimcall.}
+    updateAgent*: UpdateAgent
 
 
 func P*(x, y: float): Point =
@@ -63,5 +69,5 @@ func P*(x, y: float): Point =
 func px*(n: int): float =
   n.toFloat
 
-func ms*(n: int): int = 
+func ms*(n: int): int =
   n

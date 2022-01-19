@@ -47,18 +47,27 @@ echo stage.canvas
 
 # method move(n: SVGNode, p: Point):
 
-# func mySuperCoolAnimation(
-#   st: SvgTree, kfstart, kfend: SomeType, p: Progress = 0.0
-# ): SvgTree =
-#   discard
+
+
+func myCoolAnimationUpdate(
+  st: SVGNode, states: Switch, progress: Percent = 0.0
+): SVGNode =
+  st
+
+func myCoolAnimation(n: SVGNode, states: Switch): UpdateAgent =
+  result.node = n
+  result.fn = myCoolAnimationUpdate
+  result.states = states
+
+func
 
 defShow recording, stage:
   before:
     discard
 
   # flows are just procs
-  # flow reset:
-  #   stage.remove @blocks[1]
+  flow reset:
+    discard "flow.reset"
 
   # 'stage's are procs that are also stored in the timeline with implicitly defined 'dt' in them as time range
   # the entities in timeline are sorted based on their start time
@@ -74,11 +83,12 @@ defShow recording, stage:
     # reset()
 
   # keyframes 150.ms .. 200.ms:
-  #   scale(@blocks[0], 1.1).transition(dt, eCricleOut)
+  #   scale(@blocks[0], 1.n:1).transition(dt, eCricleOut)
   #   scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
 
-  # keyframes 170.ms .. 210.ms:
-  #   mySuperCoolAnimation(@car, whereIs @car, (0, 0)) ~> (dt, eCubicIn)
+  keyframes 170.ms .. 210.ms:
+    # myCoolAnimation(@box, (whereIs(@box), P(0, 0))) ~> (dt, eCubicIn)
+    discard @box.myCoolAnimation(P(100, 100) .. P(0, 0))
 
 # recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
   # preview = 0.ms .. 1000.ms, repeat = 1)

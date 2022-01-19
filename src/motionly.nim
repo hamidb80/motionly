@@ -181,8 +181,8 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
         procDefs.add newProc("before".ident, body = newBody)
         hasBefore = true
 
-      # of "flow":
-      #   discard newProc(body= newBody)
+      of "flow":
+        procDefs.add newProc(entity[1], body = newBody)
 
       of "keyframes":
         addTimeline entity[1]
