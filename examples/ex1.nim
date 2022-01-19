@@ -40,9 +40,9 @@ genSVGTree stage(width = 200, height = 200), ff:
   #   circle()
 
   embed """ 
-    <rect _/>
+    <rect />
   """
-  # embed readfile "./assets/car.svg"
+  embed readfile "./assets/atom.svg"
 
 echo stage.canvas
 # echo "----------"

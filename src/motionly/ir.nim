@@ -1,4 +1,4 @@
-import std/[strformat, sequtils, strutils, tables]
+import std/[strformat, sequtils, strutils, tables, strtabs, xmlparser, xmltree]
 import types, utils
 
 func parseRect*(
@@ -47,9 +47,10 @@ let baseParserMap*: ParserMap = toTable {
   "rect": parseRect,
   "circle": parseCircle,
   "arc": parseRaw[SVGArc],
-  "group": parseRaw[SVGGroup], # FIXME: "group" is not a tag name, use "g" instead 
+  "group": parseRaw[SVGGroup], # FIXME: "group" is not a tag name, use "g" instead
   "g": parseRaw[SVGGroup],
-  "test": parseRaw[SVGGroup],
+  "path": parseRaw[SVGGroup],
+  "svg": parseRaw[SVGCanvas],
 }
 
 method specialAttrs(n: SVGNode): Table[string, string] {.base.} = discard
@@ -73,8 +74,19 @@ method toIR(n: SVGNode): IRNode {.base.} =
     children: n.nodes.map toIR
   )
 
-func toIR*(s: string): IRNode=
-  result.tag = "test"
+func toIRImpl(xml: XmlNode, result: var IRNode) =
+  result.tag = xml.tag
+
+  if xml.attrs != nil:
+    result.attrs = xml.attrs.pairs.toseq
+
+  for n in xml:
+    var acc = IRNode()
+    toIRImpl(n, acc)
+    result.children.add acc
+
+proc toIR*(svgContent: string, ignoreSVGTag = true): IRNode =
+  toIRImpl parseXml(svgContent), result
 
 func `$`(ir: IRNode): string =
   let ats = ir.attrs.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "

@@ -2,6 +2,8 @@ import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta, types, ir]
 
+# FIXME use `strtabs` instead of `tables
+
 export ir, types
 # randomize()
 
