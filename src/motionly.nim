@@ -2,7 +2,7 @@ import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta, types, ir]
 
-export ir
+export ir, types
 # randomize()
 
 proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =

@@ -1,19 +1,43 @@
-import motionly
+import motionly,tables, sugar
 
 const posx = 10
 
-genSVGTree stage(width = 200, height = 200), baseParserMap:
-  group(x = posx) as @myGroup:
-    arc() as @myArc
+func update[K, V](t1: var Table[K,V], t2: Table[K,V]) =
+  for k,v in t2:
+    t1[k] = v
 
-  rect(fill = "#000", text="wow") as @blocks[0]
-  rect(fill = "#fff") as @blocks[1]
-  rect(fill = "#000") as @blocks[2]
+type 
+  MyComponent = ref object of SVGNode
+    isThatTrue: bool
 
-  # myComponent() as @table: # yay, custom component
-  #   # your custom component can have slots like vue-js
-  #   # the slot injected as its last argument when parsed to svgTree
-  #   circ() as @targer
+func parseMyComponent*(
+  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+): SVGNode =
+  var acc = MyComponent(name: tag, nodes: children)
+
+  for (key, val) in attrs:
+    acc.attrs[key] = val
+
+  acc
+
+var ff = baseParserMap.dup update totable {
+  "myComponent": parseMyComponent
+}
+
+method specialAttrs(n: MyComponent):  Table[string, string] =
+  result["style"] = "display: none"
+
+genSVGTree stage(width = 200, height = 200), ff:
+  rect()
+
+  # group(x = posx) as @myGroup:
+  #   arc() as @myArc
+
+  # rect(fill = "#fff") as @blocks[]
+  # rect(fill = "#000") as @blocks[]
+
+  # myComponent() as @myc: # yay, custom component
+  #   circle()
 
   # embed """ # you can throw raw SVG by the way
   #   <rect _/>
