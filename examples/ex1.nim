@@ -6,8 +6,9 @@ genSVGTree stage(width = 200, height = 200), baseParserMap:
   group(x = posx) as @myGroup:
     arc() as @myArc
 
-  # rect(fill = "#fff")
-  # circle(fill = "#fff") as @blocks[0] # as array
+  rect(fill = "#000", text="wow") as @blocks[0]
+  rect(fill = "#fff") as @blocks[1]
+  rect(fill = "#000") as @blocks[2]
 
   # myComponent() as @table: # yay, custom component
   #   # your custom component can have slots like vue-js

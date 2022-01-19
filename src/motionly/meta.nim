@@ -12,7 +12,8 @@ func toStmtList*(sn: seq[NimNode]): NimNode =
     result.add n
 
 func toStringNode*(n: NimNode): NimNode =
-  if n.kind in nnkLiterals: newStrLitNode repr n
+  if n.kind in {nnkStrLit, nnkTripleStrLit}: n
+  elif n.kind in nnkLiterals: newStrLitNode repr n
   else: newCall("$", n)
 
 func newObjectType*(

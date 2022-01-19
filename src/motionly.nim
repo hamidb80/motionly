@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, tables, random]
+import std/[sequtils, strutils, strformat, tables, random]
 import macros, macroplus
 import motionly/[utils, meta, types, ir]
 
@@ -38,14 +38,29 @@ func findId*(n: SVGNode, id: string): SVGNode =
   if result == nil:
     raise newException(ValueError, "no such elem with id: " & id)
 
-func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
+type
+  ComponentMap = Table[string, tuple[isseq: bool, count: int]]
+
+func ast2IR(n: NimNode, storage: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix}, $n.kind
   let hasId = n.kind == nnkInfix
-  var targetNode = n
+  var
+    targetNode = n
+    id = ""
 
   if hasId:
     assert n[InfixIdent].strVal == "as"
-    storage.add n[InfixRightSide][1].strval
+    let isseq = n[InfixRightSide].kind == nnkBracketExpr
+
+    id = strVal:
+      if isseq: n[InfixRightSide][0][1]
+      else: n[InfixRightSide][1]
+
+    if (not isseq) or (id notin storage):
+      storage[id] = (isseq, 1)
+    else:
+      storage[id].count.inc
+
     targetNode = n[InfixLeftSide]
 
     if n.len == 4: # for named wrapper body
@@ -57,7 +72,13 @@ func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
     children = newNimNode(nnkBracket)
 
   if hasId:
-    attrs.add toTupleNode(newStrLitNode("id"), storage[^1].newStrLitNode)
+    attrs.add toTupleNode(
+      newStrLitNode("id"),
+      if storage[id].isseq:
+        (fmt"{id}_{storage[id].count-1}").newStrLitNode
+      else:
+        id.newStrLitNode
+    )
 
   for arg in targetNode[CallArgs]:
     case arg.kind:
@@ -80,11 +101,10 @@ func ast2IR(n: NimNode, storage: var seq[string]): NimNode =
 proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   assert stageConfig.kind == nnkcall
 
-  var idStore: seq[string]
+  var idStore: ComponentMap
   let
     varname = stageConfig[CallIdent]
-    args = toBrackets stageConfig[CallArgs].mapIt newTree(
-      nnkTupleConstr,
+    args = toBrackets stageConfig[CallArgs].mapIt toTupleNode(
       it[0].strval.newStrLitNode,
       it[1].toStringNode
     )
@@ -98,13 +118,32 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     cntxWrapper = ident "CustomSVGStage_" & id
     stageIdent = ident("IR_" & id)
 
-    objDef = newObjectType(cntx.exported, idStore.mapIt (it.ident.exported,
-        quote do: `SVGNode`))
+    objDef = newObjectType(cntx.exported, idStore.pairs.toseq.mapIt do:(
+      it[0].ident.exported,
+      if it[1].isSeq:
+        newTree(nnkBracketExpr, ident"seq", quote do: `SVGNode`)
+      else:
+        quote do: `SVGNode`
+    ))
 
-    idGets = toStmtList idStore.mapit do:
-      let field = ident it
-      quote:
-        `varname`.components.`field` = findId(`varname`.canvas, `it`)
+    idGets = toStmtList idStore.pairs.toseq.mapit do:
+      let
+        fname = it[0]
+        field = fname.ident
+
+      if it[1].isseq:
+        var res = newStmtList()
+        
+        for i in 0 ..< it[1].count:
+          let iname = fmt"{fname}_{i}"
+          res.add quote do:
+            `varname`.components.`field`.add findId(`varname`.canvas, `iname`)
+
+        res
+
+      else:
+        quote:
+          `varname`.components.`field` = findId(`varname`.canvas, `fname`)
 
   result = quote:
     `objDef`
