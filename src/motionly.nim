@@ -38,12 +38,11 @@ func findId*(n: SVGNode, id: string): SVGNode =
   if result == nil:
     raise newException(ValueError, "no such elem with id: " & id)
 
-type
-  ComponentMap = Table[string, tuple[isseq: bool, count: int]]
-
-func ast2IR(n: NimNode, storage: var ComponentMap): NimNode =
-  assert n.kind in {nnkCall, nnkInfix}, $n.kind
-  let hasId = n.kind == nnkInfix
+func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
+  assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind
+  let 
+    hasId = n.kind == nnkInfix
+    isComponent = n.kind in {nnkCall, nnkInfix}
   var
     targetNode = n
     id = ""
@@ -56,10 +55,10 @@ func ast2IR(n: NimNode, storage: var ComponentMap): NimNode =
       if isseq: n[InfixRightSide][0][1]
       else: n[InfixRightSide][1]
 
-    if (not isseq) or (id notin storage):
-      storage[id] = (isseq, 1)
+    if (not isseq) or (id notin storageid):
+      storageid[id] = (isseq, 1)
     else:
-      storage[id].count.inc
+      storageid[id].count.inc
 
     targetNode = n[InfixLeftSide]
 
@@ -74,29 +73,36 @@ func ast2IR(n: NimNode, storage: var ComponentMap): NimNode =
   if hasId:
     attrs.add toTupleNode(
       newStrLitNode("id"),
-      if storage[id].isseq:
-        (fmt"{id}_{storage[id].count-1}").newStrLitNode
+      if storageid[id].isseq:
+        (fmt"{id}_{storageid[id].count-1}").newStrLitNode
       else:
         id.newStrLitNode
     )
 
-  for arg in targetNode[CallArgs]:
-    case arg.kind:
-    of nnkExprEqExpr: # args
-      attrs.add toTupleNode(arg[0].strval.newStrLitNode, arg[1].toStringNode)
+  if isComponent:
+    for arg in targetNode[CallArgs]:
+      case arg.kind:
+      of nnkExprEqExpr: # args
+        attrs.add toTupleNode(arg[0].strval.newStrLitNode, arg[1].toStringNode)
 
-    of nnkStmtList: # body
-      children = toBrackets arg.toseq.mapIt ast2IR(it, storage)
+      of nnkStmtList: # body
+        children = toBrackets arg.toseq.mapIt ast2IR(it, storageid)
 
-    else:
-      error "invalid arg type: " & $arg.kind
+      else:
+        error "invalid arg type: " & $arg.kind
 
-  result = quote:
-    `IRNode`(
-      tag: `tag`,
-      attrs: @`attrs`,
-      children: @`children`
-    )
+    quote:
+      `IRNode`(
+        tag: `tag`,
+        attrs: @`attrs`,
+        children: @`children`
+      )
+
+  else:
+    assert targetNode[CommandIdent].strval == "embed"
+    let code = targetNode[CommandBody]
+    quote:
+      `toIR`(`code`)
 
 proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   assert stageConfig.kind == nnkcall

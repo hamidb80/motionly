@@ -49,6 +49,7 @@ let baseParserMap*: ParserMap = toTable {
   "arc": parseRaw[SVGArc],
   "group": parseRaw[SVGGroup], # FIXME: "group" is not a tag name, use "g" instead 
   "g": parseRaw[SVGGroup],
+  "test": parseRaw[SVGGroup],
 }
 
 method specialAttrs(n: SVGNode): Table[string, string] {.base.} = discard
@@ -71,6 +72,9 @@ method toIR(n: SVGNode): IRNode {.base.} =
     attrs: merge(specialAttrs(n), n.attrs).pairs.toseq,
     children: n.nodes.map toIR
   )
+
+func toIR*(s: string): IRNode=
+  result.tag = "test"
 
 func `$`(ir: IRNode): string =
   let ats = ir.attrs.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "

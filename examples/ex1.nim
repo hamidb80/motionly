@@ -39,9 +39,9 @@ genSVGTree stage(width = 200, height = 200), ff:
   # myComponent() as @myc: # yay, custom component
   #   circle()
 
-  # embed """ # you can throw raw SVG by the way
-  #   <rect _/>
-  # """
+  embed """ # you can throw raw SVG by the way
+    <rect _/>
+  """
   # embed readfile "./assets/car.svg" # or embed external svg?
 
 echo stage.canvas

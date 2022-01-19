@@ -39,3 +39,5 @@ type
   ): SVGNode {.nimcall.}
 
   ParserMap* = Table[string, IRParser] # tag name => parser func
+
+  ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
