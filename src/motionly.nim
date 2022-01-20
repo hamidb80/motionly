@@ -83,7 +83,6 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
 
     children = toBrackets code.toseq.mapIt ast2IR(it, idStore)
 
-  let
     # id = $rand(1 .. 9999) # FIXME
     id = "22"
     cntx = ident "CustomComponents_" & id
@@ -137,26 +136,24 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
   debugecho "---------------"
   debugecho repr result
 
-macro defStage*(
-  stageConfig: untyped, parserMap: typed, body: untyped
-): untyped =
+macro defStage*(stageConfig: untyped, parserMap: typed, body): untyped =
   return toSVGTree(stageConfig, parserMap, body)
 
 # ----------------------------------------------------------
 
-func replaceStageComponents*(stageVar, body: NimNode): NimNode =
+func replaceStageComponents*(body: NimNode): NimNode =
   result = body
 
   for i, n in body.pairs:
     if n.kind == nnkPrefix and n[0].strval == "@":
       let componentName = n[1]
       result[i] = quote:
-        `stageVar`.components.`componentName`
+        stage.components.`componentName`
 
     else:
-      result[i] = replaceStageComponents(stagevar, n)
+      result[i] = replaceStageComponents(n)
 
-func defShowImpl(showVar, stageVar, body: NimNode): NimNode =
+func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
   var
     timelineIR: seq[tuple[timeRange, fn: NimNode]]
     procDefs = newStmtList()
@@ -165,24 +162,38 @@ func defShowImpl(showVar, stageVar, body: NimNode): NimNode =
   for i, entity in body:
     template addTimeline(what2add): untyped {.dirty.} =
       entity.expectLen(3)
-      let stgName = ident fmt"timeRange_{i}"
-      procDefs.add newProc(stgName, body = newBody)
-      timelineIR.add (what2add, stgName)
+      let
+        stgName = ident fmt"timeRange_{i}"
+        sident = "stage".ident
+        dti = "dt".ident
+        defs = quote do:
+          let `sident` {.used.} = (typeof `stageVar`)(commonStage)
+          let `dti` {.used.} = `what2add`
+        newBody = newStmtList(
+          `defs`,
+          castSafety replaceStageComponents(entity[CommandBody]),
+        )
 
+      procDefs.add newProc(
+        stgName,
+        genFormalParams(newEmptyNode(), [
+            newIdentDefs("commonStage".ident, "SVGStage".ident),
+            newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
+        ]).toseq,
+        newBody)
+      timelineIR.add (what2add, stgName)
 
     case entity.kind:
     of nnkCommand, nnkCall:
-      let
-        name = entity[CommandIdent].strVal
-        newBody = castSafety replaceStageComponents(stageVar, entity[CommandBody])
+      let name = entity[CommandIdent].strVal
 
       case name:
-      of "before":
-        procDefs.add newProc("before".ident, body = newBody)
-        hasBefore = true
+      # of "before":
+      #   procDefs.add newProc("before".ident, body = newBody)
+      #   hasBefore = true
 
-      of "flow":
-        procDefs.add newProc(entity[1], body = newBody)
+      # of "flow":
+      #   procDefs.add newProc(entity[1], body = newBody)
 
       of "on":
         addTimeline entity[1]
@@ -199,15 +210,12 @@ func defShowImpl(showVar, stageVar, body: NimNode): NimNode =
   let tb = toBrackets timelineIR.mapIt toTupleNode(it[0], it[1])
 
   result = quote:
-    var `showVar`: seq[`Animation`]
-
     `procDefs`
-    var timeline: `TimeLine` = @`tb`
-    timeline.sort
-
+    var `timelineVar`: `TimeLine` = @`tb`
+    `timelineVar`.sort ## sort before usage
 
   debugEcho "++++++++++++++"
   debugEcho repr result
 
-macro defShow*(showVar: untyped, stageVar: typed, body): untyped =
-  defShowImpl(showVar, stageVar, body)
+macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
+  defTimelineImpl(timelineVar, stageVar, body)

@@ -47,32 +47,20 @@ defStage stage(width = 200, height = 200), ff:
 
 # --------------------------------
 
-type
-  PointState = ref object of State
-    x, y: float
+func myCoolAnimation(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
+  proc updater(progress: Percent): SVGNode = st
+  updater
 
-func myCoolAnimationUpdate(
-  st: SVGNode, states: Switch, progress: Percent = 0.0
-): SVGNode =
-  st
+func p(x, y: int): Point =
+  Point(x: x.toFloat, y: y.toFloat)
 
-func p(x, y: int): PointState =
-  PointState(x: x.toFloat, y: y.toFloat)
-
-method myCoolAnimation(
-  n: SVGNode, states: (PointState, PointState)
-): UpdateAgent =
-  # assert n of SVGRect
-  UpdateAgent(node: n, states: states, fn: myCoolAnimationUpdate)
-
-
-defShow recording, stage:
-  before:
-    discard
+defTimeline timeline, stage:
+  # before:
+  #   discard
 
   # flows are just procs
-  flow reset:
-    discard "flow.reset"
+  # flow reset:
+  #   discard "flow.reset"
 
   # 'stage's are procs that are also stored in the timeline with implicitly defined 'dt' in them as time range
   # the entities in timeline are sorted based on their start time
@@ -93,8 +81,7 @@ defShow recording, stage:
 
   on 170 .. 210:
     # myCoolAnimation(@box, (whereIs(@box), P(0, 0))) ~> (dt, eCubicIn)
-    echo @box.myCoolAnimation (p(100, 100), p(0, 0))
+    register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10, eInCubic)
 
 
-# recording.save("out.gif", 120.fps, size = (1000.px, 400.px), scale = 5.0,
-  # preview = 0.ms .. 1000.ms, repeat = 1)
+timeline.save("out.gif", 120.fps, p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)

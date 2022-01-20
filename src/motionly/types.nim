@@ -27,7 +27,7 @@ type
 
   SVGArc* = ref object of SVGNode
 
-  # IR :: Intermediate representation
+  ## IR :: Intermediate representation
   IRNode* = object
     tag*: string
     attrs*: seq[(string, string)]
@@ -44,29 +44,29 @@ type
 
   ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
 
-  KeyFrame* = tuple[timeRange: HSlice[int, int], fn: proc() {.nimcall.}]
-  TimeLine* = seq[KeyFrame]
-
   State* = ref object of RootObj
-  Switch* = tuple[first, last: State]
 
   EasingFn* = proc(total, elapsed: int): Percent {.nimcall.}
-
-  UpdateAgent* = object
-    node*: SVGNode
-    states*: Switch
-    fn*: proc(n: SVGNode, states: Switch, progress: Percent
-    ): SVGNode {.nimcall.}
+  UpdateFn* = proc(progress: Percent): SVGNode {.closure.}
 
   Transition* = object
     totalTime*: int
     easingFn*: EasingFn
-    updateAgent*: UpdateAgent
+    updateFn*: UpdateFn
 
   Animation* = object
     start*: int
     t*: Transition
 
+  Recording* = seq[Animation]
+
+  KeyFrame* = tuple
+    timeRange: HSlice[int, int]
+    fn: proc(commonStage: SVGStage, cntx: var Recording) {.nimcall.}
+
+  TimeLine* = seq[KeyFrame]
+
   Percent* = range[0.0 .. 100.0]
   ms* = int
   px* = float
+  fps* = int

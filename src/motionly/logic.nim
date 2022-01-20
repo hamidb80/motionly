@@ -55,14 +55,27 @@ type
 proc sinin(total, elapsed: int): Percent =
   discard
 
-func applyTransition*(t: Transition, efn: EasingFn, delay = 0): Animation =
-  discard
-
 func applyTransition*(
-  t: Transition, e: CommonEasings, delay = 0
-): Animation {.inline.} =
+  u: UpdateFn, len: int, e: EasingFn
+): Transition =
+  Transition(totalTime: len, easingFn: e, updateFn: u)
 
-  applyTransition(t, sinin, delay)
+func tofn(e: CommonEasings): EasingFn =
+  sinin
 
-template `~>`*(t: Transition, e: CommonEasings, delay = 0): untyped =
-  applyTransition(t, e, delay)
+func `~>`*(
+  u: UpdateFn, props: tuple[len: int, easing: CommonEasings]
+): Transition =
+  u.applyTransition(props.len, props.easing.tofn)
+
+func toAnimation*(t: Transition, startTime: int): Animation =
+  Animation(start: startTime, t: t)
+
+template register*(t: Transition): untyped {.dirty.} =
+  cntx.add t.toAnimation(dt.a)
+
+proc save*(
+  tl: TimeLine, outputPath: string, frameRate: int, size: Point,
+  preview = (-1) .. (-1), repeat = 1
+) =
+  discard
