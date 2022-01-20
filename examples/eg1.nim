@@ -1,6 +1,5 @@
-import motionly, tables, sugar
+import motionly, tables, sugar, strutils
 
-const posx = 10
 
 func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
   for k, v in t2:
@@ -27,11 +26,15 @@ let ff = baseParserMap.dup update totable {
   "myComponent": parseMyComponent
 }
 
-defStage stage(width = 200, height = 200), ff:
+const
+  posx = 10
+  w = 100
+
+defStage stage(width = w, height = 200), ff:
   # group(x = posx) as @myGroup:
   #   arc() as @myArc
 
-  rect(fill = "#fff") as @box
+  rect(x = posx) as @box
   rect(fill = "#000") as @blocks[]
   rect(fill = "#000") as @blocks[]
 
@@ -42,8 +45,6 @@ defStage stage(width = 200, height = 200), ff:
   #   <rect />
   # """
   # embed readfile "./assets/atom.svg"
-
-# echo stage.canvas
 
 # --------------------------------
 
@@ -58,19 +59,15 @@ defTimeline timeline, stage:
   # before:
   #   discard
 
-  # flows are just procs
+  # # flows are just procs
   # flow reset:
   #   discard "flow.reset"
-
-  # 'stage's are procs that are also stored in the timeline with implicitly defined 'dt' in them as time range
-  # the entities in timeline are sorted based on their start time
 
   on 0.ms .. 100.ms:
     # let k = move(@box, P(10.px, 100.px))
     # k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
     discard "first kf"
 
-  # 'at's are just a on that it's time range is t..t
   at 130.ms:
     discard "at"
     # reset()
@@ -79,9 +76,11 @@ defTimeline timeline, stage:
   #   scale(@blocks[0], 1.n:1).transition(dt, eCricleOut)
   #   scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
 
-  on 170 .. 210:
+  on 170.ms .. 210.ms:
     # myCoolAnimation(@box, (whereIs(@box), P(0, 0))) ~> (dt, eCubicIn)
     register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10, eInCubic)
 
+
+echo timeline.join "\n"
 
 timeline.save("out.gif", 120.fps, p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)

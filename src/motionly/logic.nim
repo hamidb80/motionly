@@ -74,8 +74,10 @@ func toAnimation*(t: Transition, startTime: int): Animation =
 template register*(t: Transition): untyped {.dirty.} =
   cntx.add t.toAnimation(dt.a)
 
+const allFrames = (-1) .. (-1)
+
 proc save*(
   tl: TimeLine, outputPath: string, frameRate: int, size: Point,
-  preview = (-1) .. (-1), repeat = 1
+  preview = allFrames, repeat = 1
 ) =
   discard

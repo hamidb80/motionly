@@ -164,36 +164,34 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
       entity.expectLen(3)
       let
         stgName = ident fmt"timeRange_{i}"
-        sident = "stage".ident
-        dti = "dt".ident
+        sident = ident "stage"
+        dti = ident "dt"
         defs = quote do:
           let `sident` {.used.} = (typeof `stageVar`)(commonStage)
           let `dti` {.used.} = `what2add`
-        newBody = newStmtList(
-          `defs`,
-          castSafety replaceStageComponents(entity[CommandBody]),
-        )
 
       procDefs.add newProc(
         stgName,
         genFormalParams(newEmptyNode(), [
-            newIdentDefs("commonStage".ident, "SVGStage".ident),
-            newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
+          newIdentDefs("commonStage".ident, "SVGStage".ident),
+          newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
         ]).toseq,
-        newBody)
+        newStmtList(defs, resolvedBody))
       timelineIR.add (what2add, stgName)
 
     case entity.kind:
     of nnkCommand, nnkCall:
-      let name = entity[CommandIdent].strVal
+      let
+        name = entity[CommandIdent].strVal
+        resolvedBody = castSafety replaceStageComponents(entity[CommandBody])
 
       case name:
       # of "before":
-      #   procDefs.add newProc("before".ident, body = newBody)
+      #   procDefs.add newProc("before".ident, body = resolvedBody)
       #   hasBefore = true
 
       # of "flow":
-      #   procDefs.add newProc(entity[1], body = newBody)
+      #   procDefs.add newProc(entity[1], body = resolvedBody)
 
       of "on":
         addTimeline entity[1]
