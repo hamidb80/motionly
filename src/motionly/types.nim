@@ -3,6 +3,9 @@ import tables
 # TODO use `strtabs` instead of `tables
 
 type
+  Point* = object
+    x*, y*: float
+
   SVGNode* = ref object of RootObj
     name*: string
     attrs*, styles*: Table[string, string]
@@ -41,33 +44,29 @@ type
 
   ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
 
-  Point* = object
-    x*, y*: float
-
-  Percent* = range[0.0 .. 100.0]
-
   KeyFrame* = tuple[timeRange: HSlice[int, int], fn: proc() {.nimcall.}]
   TimeLine* = seq[KeyFrame]
 
   State* = ref object of RootObj
-  Switch* = HSlice[State, State]
+  Switch* = tuple[first, last: State]
+
+  EasingFn* = proc(total, elapsed: int): Percent {.nimcall.}
 
   UpdateAgent* = object
     node*: SVGNode
     states*: Switch
-    fn*: proc(n: SVGNode, states: Switch, progress: Percent): SVGNode {.nimcall.}
+    fn*: proc(n: SVGNode, states: Switch, progress: Percent
+    ): SVGNode {.nimcall.}
 
   Transition* = object
     totalTime*: int
-    easingFn*: proc(total, elapsed: float): Percent {.nimcall.}
+    easingFn*: EasingFn
     updateAgent*: UpdateAgent
 
+  Animation* = object
+    start*: int
+    t*: Transition
 
-func P*(x, y: float): Point =
-  Point(x: x, y: y)
-
-func px*(n: int): float =
-  n.toFloat
-
-func ms*(n: int): int =
-  n
+  Percent* = range[0.0 .. 100.0]
+  ms* = int
+  px* = float

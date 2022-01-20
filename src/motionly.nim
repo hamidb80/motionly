@@ -156,7 +156,7 @@ func replaceStageComponents*(stageVar, body: NimNode): NimNode =
     else:
       result[i] = replaceStageComponents(stagevar, n)
 
-func defShowImpl(stageVar, body: NimNode): NimNode =
+func defShowImpl(showVar, stageVar, body: NimNode): NimNode =
   var
     timelineIR: seq[tuple[timeRange, fn: NimNode]]
     procDefs = newStmtList()
@@ -165,7 +165,7 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
   for i, entity in body:
     template addTimeline(what2add): untyped {.dirty.} =
       entity.expectLen(3)
-      let stgName = ident fmt"keyframes_{i}"
+      let stgName = ident fmt"timeRange_{i}"
       procDefs.add newProc(stgName, body = newBody)
       timelineIR.add (what2add, stgName)
 
@@ -174,7 +174,7 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
     of nnkCommand, nnkCall:
       let
         name = entity[CommandIdent].strVal
-        newBody = replaceStageComponents(stageVar, entity[CommandBody])
+        newBody = castSafety replaceStageComponents(stageVar, entity[CommandBody])
 
       case name:
       of "before":
@@ -184,7 +184,7 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
       of "flow":
         procDefs.add newProc(entity[1], body = newBody)
 
-      of "keyframes":
+      of "on":
         addTimeline entity[1]
 
       of "at":
@@ -197,13 +197,17 @@ func defShowImpl(stageVar, body: NimNode): NimNode =
       error "not valid entity kind: " & $entity.kind
 
   let tb = toBrackets timelineIR.mapIt toTupleNode(it[0], it[1])
+
   result = quote:
+    var `showVar`: seq[`Animation`]
+
     `procDefs`
     var timeline: `TimeLine` = @`tb`
     timeline.sort
+
 
   debugEcho "++++++++++++++"
   debugEcho repr result
 
 macro defShow*(showVar: untyped, stageVar: typed, body): untyped =
-  defShowImpl(stageVar, body)
+  defShowImpl(showVar, stageVar, body)

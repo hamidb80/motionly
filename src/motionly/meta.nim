@@ -28,3 +28,9 @@ func newObjectType*(
 
   typedef[0] = objName
   result = newTree(nnkTypeSection, typeDef.add(objectDef))
+
+func castSafety*(code: NimNode): NimNode=
+  quote:
+    {.cast(noSideEffect).}:
+      {.cast(gcsafe).}:
+        `code`

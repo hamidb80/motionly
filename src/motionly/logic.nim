@@ -37,3 +37,32 @@ func findId*(n: SVGNode, id: string): SVGNode =
 func sort*(tl: var TimeLine) =
   tl.sort proc (k1, k2: KeyFrame): int =
     cmp(k1.timeRange.a, k2.timeRange.a)
+
+type
+  CommonEasings* = enum
+    ## see https://easings.net/
+    eInSine, eOutSine, eInOutSine
+    eInQuad, eOutQuad, eInOutQuad
+    eInCubic, eOutCubic, eInOutCubic
+    eInQuart, eOutQuart, eInOutQuart
+    eInQuint, eOutQuint, eInOutQuint
+    eInExpo, eOutExpo, eInOutExpo
+    eInCirc, eOutCirc, eInOutCirc
+    eInBack, eOutBack, eInOutBack
+    eInElastic, eOutElastic, eInOutElastic
+    eInBoune, eOutBoune, eInOutBounce
+
+proc sinin(total, elapsed: int): Percent =
+  discard
+
+func applyTransition*(t: Transition, efn: EasingFn, delay = 0): Animation =
+  discard
+
+func applyTransition*(
+  t: Transition, e: CommonEasings, delay = 0
+): Animation {.inline.} =
+
+  applyTransition(t, sinin, delay)
+
+template `~>`*(t: Transition, e: CommonEasings, delay = 0): untyped =
+  applyTransition(t, e, delay)
