@@ -1,26 +1,5 @@
-import std/[sequtils, tables, strutils, algorithm]
-import macros, macroplus
-import types, utils, meta
-
-proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
-  let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
-
-  if ir.tag in parserMap:
-    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
-  else:
-    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
-
-proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
-  let attrs = toTable ir.attrs
-  assert attrs.containsAll ["width", "height"]
-
-  result = SVGCanvas(
-    name: "svg",
-    width: attrs["width"].parseFloat,
-    height: attrs["height"].parseFloat,
-  )
-
-  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
+import std/[tables, algorithm]
+import types
 
 func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
   if n.attrs.getOrDefault("id", "") == id:
@@ -44,40 +23,23 @@ func sort*(tl: var TimeLine) =
 func linearEasing(p: Percent): Percent =
   p
 
-func toFn(e: CommonEasings): EasingFn =
+func toFn*(e: CommonEasings): EasingFn =
   case e:
   of eLinear: linearEasing
   else:
     raise newException(ValueError, "corresponding easing function is not defined yet: " & $e)
 
-func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
-  Transition(totalTime: len, easingFn: e, updateFn: u)
-
-func `~>`*(
-  u: UpdateFn, props: tuple[len: MS, easing: CommonEasings]
-): Transition =
-  u.applyTransition(props.len, props.easing.tofn)
-
-func len*(rng: HSlice[float, float]): float=
+func len*(rng: HSlice[float, float]): float =
   rng.b - rng.a
 
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
 
-template register*(t: Transition): untyped {.dirty.} =
-  cntx.add t.toAnimation()
+func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
+  Transition(totalTime: len, easingFn: e, updateFn: u)
 
-template r*(t: Transition): untyped {.dirty.} =
-  register t
-
-proc resolveFlowCall(flowCall: NimNode): NimNode =
-  assert flowCall.kind == nnkCall
-  flowCall.insertMulti(CallIdent + 1, "commonStage".ident, "cntx".ident)
-  flowCall
-
-macro `!`*(flowCall): untyped =
-  ## for calling flows
-  resolveFlowCall(flowCall)
+func applyTransition*(u: UpdateFn, len: MS, e: CommonEasings): Transition =
+  Transition(totalTime: len, easingFn: e.tofn, updateFn: u)
 
 func percentLimit(n: float): Percent =
   min(n, 100.0)
@@ -123,5 +85,12 @@ proc save*(
           anims.add a
 
       activeAnimations = anims
+
+    block takeSnapShot:
+      # FIXME think of preovew is a 1 single framew loke 10.ms .. 10.ms and fps is 30
+      # i mean there is possiblity for currentTime to jump over preview range
+
+      if currentTime in preview:
+        discard 
 
     currentTime += frameDuration

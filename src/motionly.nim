@@ -1,8 +1,28 @@
 import std/[sequtils, strutils, strformat, tables]
 import macros, macroplus
-import motionly/[meta, types, ir, logic]
+import motionly/[meta, types, ir, utils, logic]
 
 export ir, types, logic
+
+proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
+  let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
+
+  if ir.tag in parserMap:
+    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
+  else:
+    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
+
+proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
+  let attrs = toTable ir.attrs
+  assert attrs.containsAll ["width", "height"]
+
+  result = SVGCanvas(
+    name: "svg",
+    width: attrs["width"].parseFloat,
+    height: attrs["height"].parseFloat,
+  )
+
+  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
 
 func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind
@@ -166,7 +186,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         sident = ident "stage"
         dti = ident "dt"
         defs = quote do:
-          let 
+          let
             `sident` {.used.} = (typeof `stageVar`)(commonStage)
             `dti` {.used.} = len(`timeRange`)
 
@@ -194,7 +214,8 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
       of "flow":
         let
           flowName = entity[1][ObjConstrIdent]
-          args = entity[1][ObjConstrFields].mapIt newTree(nnkExprColonExpr, newIdentDefs(it[0], it[1]))
+          args = entity[1][ObjConstrFields].mapIt newTree(nnkExprColonExpr,
+              newIdentDefs(it[0], it[1]))
           sident = ident "stage"
           defs = quote do:
             let `sident` {.used.} = (typeof `stageVar`)(commonStage)
@@ -232,3 +253,25 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)
+
+# ---------------------------------------------------------
+
+func `~>`*(
+  u: UpdateFn, props: tuple[len: MS, easing: CommonEasings]
+): Transition =
+  u.applyTransition(props.len, props.easing)
+
+template register*(t: Transition): untyped {.dirty.} =
+  cntx.add t.toAnimation()
+
+template r*(t: Transition): untyped {.dirty.} =
+  register t
+
+proc resolveFlowCall(flowCall: NimNode): NimNode =
+  assert flowCall.kind == nnkCall
+  flowCall.insertMulti(CallIdent + 1, "commonStage".ident, "cntx".ident)
+  flowCall
+
+macro `!`*(flowCall): untyped =
+  ## for calling flows
+  resolveFlowCall(flowCall)
