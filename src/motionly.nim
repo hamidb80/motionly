@@ -1,32 +1,8 @@
 import std/[sequtils, strutils, strformat, tables, macros]
 import macroplus
-import motionly/[meta, types, ir, utils, logic]
+import motionly/[meta, types, ir, logic]
 
 export ir, types, logic
-
-proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
-  let nodes = ir.children.mapIt parseIRImpl(it, nil, parserMap)
-
-  if ir.tag in parserMap:
-    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
-
-    for n in nodes:
-      n.parent = result
-
-  else:
-    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
-
-proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
-  let attrs = toTable ir.attrs
-  assert attrs.containsAll ["width", "height"]
-
-  result = SVGCanvas(
-    name: "svg",
-    width: attrs["width"].parseFloat,
-    height: attrs["height"].parseFloat,
-  )
-
-  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
 
 func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind
@@ -157,8 +133,8 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     `varname`.canvas = `parseIR`(`stageIdent`, `parserMap`)
     `idGets`
 
-  debugecho "++++++++++++++"
-  debugEcho repr result
+  # debugecho "++++++++++++++"
+  # debugEcho repr result
 
 macro defStage*(stageConfig: untyped, parserMap: typed, body): untyped =
   return toSVGTree(stageConfig, parserMap, body)
@@ -251,9 +227,9 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     var `timelineVar`: `TimeLine` = @`tb`
     `timelineVar`.sort ## sort before usage
 
-  debugEcho "=============="
-  debugEcho repr result
-  debugEcho "////////////////"
+  # debugEcho "=============="
+  # debugEcho repr result
+  # debugEcho "////////////////"
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)

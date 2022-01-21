@@ -1,6 +1,30 @@
 import std/[strformat, sequtils, strutils, tables, strtabs, xmlparser, xmltree]
 import types, utils
 
+proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
+  let nodes = ir.children.mapIt parseIRImpl(it, nil, parserMap)
+
+  if ir.tag in parserMap:
+    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
+
+    for n in nodes:
+      n.parent = result
+
+  else:
+    raise newException(ValueError, "no such parser for tag name: " & ir.tag)
+
+proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
+  let attrs = toTable ir.attrs
+  assert attrs.containsAll ["width", "height"]
+
+  result = SVGCanvas(
+    name: "svg",
+    width: attrs["width"].parseFloat,
+    height: attrs["height"].parseFloat,
+  )
+
+  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
+
 func parseRect*(
   tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
 ): SVGNode =
@@ -41,7 +65,6 @@ func parseRaw*[S: SVGNode](
     acc.attrs[key] = val
 
   acc
-
 
 let baseParserMap*: ParserMap = toTable {
   "rect": parseRect,

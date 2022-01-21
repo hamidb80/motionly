@@ -1,4 +1,4 @@
-import std/[tables, sugar, strutils]
+import std/[tables, sugar]
 import motionly
 
 func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
@@ -74,8 +74,6 @@ defTimeline timeline, mystage:
   on 170.ms .. 210.ms:
     register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
-
-echo timeline.join "\n"
 
 timeline.save("out.gif", mystage, 120.fps,
   p(1000, 400), preview = 0.ms .. 1_000.ms, repeat = 1)
