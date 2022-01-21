@@ -133,6 +133,9 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     `varname`.canvas = `parseIR`(`stageIdent`, `parserMap`)
     `idGets`
 
+  debugecho "++++++++++++++"
+  debugEcho repr result
+
 macro defStage*(stageConfig: untyped, parserMap: typed, body): untyped =
   return toSVGTree(stageConfig, parserMap, body)
 

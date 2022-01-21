@@ -35,18 +35,20 @@ func findId*(n: SVGNode, id: string): SVGNode =
   if result == nil:
     raise newException(ValueError, "no such elem with id: " & id)
 
-func sort*(tl: var TimeLine) =
-  tl.sort proc (k1, k2: KeyFrame): int =
-    cmp(k1.startTime, k2.startTime)
+func cmp*(k1, k2: KeyFrame): int =
+  cmp(k1.startTime, k2.startTime)
 
-proc linearEasing(p: Percent): Percent =
+func sort*(tl: var TimeLine) =
+  tl.sort cmp
+
+func linearEasing(p: Percent): Percent =
   p
 
 func toFn(e: CommonEasings): EasingFn =
   case e:
   of eLinear: linearEasing
   else:
-    raise newException(ValueError, "corresponding easing function is not defined yet")
+    raise newException(ValueError, "corresponding easing function is not defined yet: " & $e)
 
 func applyTransition*(u: UpdateFn, len: int, e: EasingFn): Transition =
   Transition(totalTime: len, easingFn: e, updateFn: u)
@@ -56,11 +58,11 @@ func `~>`*(
 ): Transition =
   u.applyTransition(props.len, props.easing.tofn)
 
-func toAnimation*(t: Transition, startTime: int): Animation =
-  Animation(start: startTime, t: t)
+func toAnimation*(t: Transition): Animation =
+  Animation(t: t)
 
 template register*(t: Transition): untyped {.dirty.} =
-  cntx.add t.toAnimation(dt)
+  cntx.add t.toAnimation()
 
 template r*(t: Transition): untyped {.dirty.} =
   register t
@@ -74,9 +76,49 @@ macro `!`*(flowCall): untyped =
   ## for calling flows
   resolveFlowCall(flowCall)
 
-const allFrames = (-1) .. (-1)
+func percentLimit(n: float): Percent =
+  min(n, 100.0)
+
+const fullTimeRange = 0 .. 10_000
 proc save*(
-  tl: TimeLine, outputPath: string, frameRate: int, size: Point,
-  preview = allFrames, repeat = 1
+  tl: TimeLine, outputPath: string,
+  stage: SVGStage, frameRate: FPS, size: Point,
+  preview = fullTimeRange, repeat = 1
 ) =
-  discard
+  assert isSorted tl
+
+  let frameDuration = 1000 / frameRate
+  var
+    currentTime = 0.0
+    activeAnimations: Recording
+    tli = 0
+
+  while tli <= tl.high or activeAnimations.len != 0:
+    block collectNewAnimations:
+      var newAnimations: Recording
+      
+      while tli <= tl.high:
+        if currentTime >= tl[tli].startTime.float:
+          tl[tli].fn(stage, newAnimations)
+          tli.inc
+        else: break
+
+      for a in newAnimations.mitems:
+        a.startTime = currentTime
+
+      activeAnimations.add newAnimations
+
+    block filteringAnimations:
+      var anims: Recording
+      for a in activeAnimations:
+        let timeProgress = percentLimit:
+          (currentTime - a.startTime) / a.t.totalTime.float * 100
+
+        a.t.updateFn(a.t.easingFn(timeProgress))
+
+        if timeProgress != 100.0:
+          anims.add a
+
+      activeAnimations = anims
+
+    currentTime += frameDuration

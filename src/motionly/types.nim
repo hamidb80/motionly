@@ -28,6 +28,9 @@ type
   SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
     width*, height*: float
 
+  SVGStage* = ref object of RootObj
+    canvas*: SVGCanvas
+
   SVGGroup* = ref object of SVGNode
 
   SVGRect* = ref object of SVGNode
@@ -40,11 +43,8 @@ type
 
   SVGArc* = ref object of SVGNode
 
-  SVGStage* = ref object of RootObj
-    canvas*: SVGCanvas
-
   EasingFn* = proc(timeProgress: Percent): Percent {.nimcall.}
-  UpdateFn* = proc(animationProgress: Percent): SVGNode {.closure.}
+  UpdateFn* = proc(animationProgress: Percent) {.closure.}
 
   Transition* = object
     totalTime*: int
@@ -52,7 +52,7 @@ type
     updateFn*: UpdateFn
 
   Animation* = object
-    start*: int
+    startTime*: float
     t*: Transition
 
   Recording* = seq[Animation]
@@ -78,7 +78,11 @@ type
     eInBoune, eOutBoune, eInOutBounce
 
   Percent* = range[0.0 .. 100.0]
-  ms* = int
-  px* = float
-  fps* = int
+  MS* = int
+  PX* = float
+  FPS* = float
+
+func ms*(i: int): MS = i
+func px*(i: int): PX = i.toFloat
+func fps*(i: int): FPS = i.toFloat
 

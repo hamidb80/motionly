@@ -30,7 +30,7 @@ const
   posx = 10
   w = 100
 
-defStage stage(width = w, height = 200), ff:
+defStage mystage(width = w, height = 200), ff:
   # group(x = posx) as @myGroup:
   #   arc() as @myArc
 
@@ -49,14 +49,14 @@ defStage stage(width = w, height = 200), ff:
 # --------------------------------
 
 func myCoolAnimation(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
-  proc updater(progress: Percent): SVGNode = st
+  proc updater(progress: Percent) = discard
   updater
 
 func p(x, y: int): Point =
   Point(x: x.toFloat, y: y.toFloat)
 
 expandMacros:
-  defTimeline timeline, stage:
+  defTimeline timeline, mystage:
     flow reset():
       discard "flow.reset"
 
@@ -79,10 +79,9 @@ expandMacros:
     #   scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
 
     on 170.ms .. 210.ms:
-      # myCoolAnimation(@box, (whereIs(@box), P(0, 0))) ~> (dt, eCubicIn)
-      register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10, eInCubic)
+      register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10, eLinear)
 
 
 echo timeline.join "\n"
 
-timeline.save("out.gif", 120.fps, p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)
+timeline.save("out.gif", mystage, 120.fps, p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)
