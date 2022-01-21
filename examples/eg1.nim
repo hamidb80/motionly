@@ -74,6 +74,5 @@ defTimeline timeline, mystage:
   on 170.ms .. 210.ms:
     register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
-
-timeline.save("out.gif", mystage, 120.fps,
-  p(1000, 400), preview = 0.ms .. 1_000.ms, repeat = 1)
+timeline.save("./temp/out.gif", mystage, 120.fps, 
+  preview = 0.ms .. 100.ms, repeat = 1)

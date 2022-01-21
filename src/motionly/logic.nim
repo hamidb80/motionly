@@ -1,5 +1,5 @@
-import std/[tables, algorithm]
-import types
+import std/[os, osproc, strformat, tables, algorithm, math]
+import types, ir
 
 func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
   if n.attrs.getOrDefault("id", "") == id:
@@ -20,8 +20,11 @@ func cmp*(k1, k2: KeyFrame): int =
 func sort*(tl: var TimeLine) =
   tl.sort cmp
 
-func linearEasing(p: Percent): Percent =
+func linearEasing(p: Progress): Progress =
   p
+
+func toCentiSeconds(ms: MS): int =
+  (ms / 10).ceil.toint.max(2)
 
 func toFn*(e: CommonEasings): EasingFn =
   case e:
@@ -41,55 +44,70 @@ func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
 func applyTransition*(u: UpdateFn, len: MS, e: CommonEasings): Transition =
   Transition(totalTime: len, easingFn: e.tofn, updateFn: u)
 
-func percentLimit(n: float): Percent =
-  min(n, 100.0)
+func progressLimit(n: float): Progress =
+  min(n, 1.0)
+
+func genFrameFileName(fname: string, index: int): string =
+  fmt"{fname}_{index:08}.svg"
 
 proc save*(
   tl: TimeLine, outputPath: string,
-  stage: SVGStage, frameRate: FPS, size: Point,
-  preview = 0.ms .. 10_000.ms, repeat = 1
+  stage: SVGStage, frameRate: FPS, scale = 1.0,
+  preview = 0.ms .. 10_000.ms, repeat = 1, justFirstFrame = false
 ) =
   assert isSorted tl
 
-  let frameDuration = 1000 / frameRate
+  let
+    (dir, fname, _) = splitFile(outputPath)
+    frameDuration = 1000 / frameRate
+
   var
     currentTime = 0.0
     activeAnimations: Recording
     tli = 0
+    savedCount = 0
 
-  while tli <= tl.high or activeAnimations.len != 0:
-    block collectNewAnimations:
-      var newAnimations: Recording
+  block loop:
+    while (tli <= tl.high or activeAnimations.len != 0) and currentTime <= preview.b:
+      block collectNewAnimations:
+        var newAnimations: Recording
 
-      while tli <= tl.high:
-        if currentTime >= tl[tli].startTime:
-          tl[tli].fn(stage, newAnimations)
-          tli.inc
-        else: break
+        while tli <= tl.high:
+          if currentTime >= tl[tli].startTime:
+            tl[tli].fn(stage, newAnimations)
+            tli.inc
+          else: break
 
-      for a in newAnimations.mitems:
-        a.startTime = currentTime
+        for a in newAnimations.mitems:
+          a.startTime = currentTime
 
-      activeAnimations.add newAnimations
+        activeAnimations.add newAnimations
 
-    block applyAndFilterAnimations:
-      var anims: Recording
-      for a in activeAnimations:
-        let timeProgress = percentLimit:
-          (currentTime - a.startTime) / a.t.totalTime * 100
+      block applyAndFilterAnimations:
+        var anims: Recording
+        for a in activeAnimations:
+          let timeProgress = progressLimit:
+            (currentTime - a.startTime) / a.t.totalTime
 
-        a.t.updateFn(a.t.easingFn(timeProgress))
+          a.t.updateFn(a.t.easingFn(timeProgress))
 
-        if timeProgress != 100.0:
-          anims.add a
+          if timeProgress != 100.0:
+            anims.add a
 
-      activeAnimations = anims
+        activeAnimations = anims
 
-    block takeSnapShot:
-      # FIXME think of preovew is a 1 single framew loke 10.ms .. 10.ms and fps is 30
-      # i mean there is possiblity for currentTime to jump over preview range
+      block takeSnapShot:
+        if currentTime in preview:
+          writeFile(dir / genFrameFileName(fname, savedCount), $stage.canvas)
+          savedCount.inc
 
-      if currentTime in preview:
-        discard
+        if justFirstFrame:
+          break loop
 
-    currentTime += frameDuration
+      currentTime += frameDuration
+
+  # debugEcho fmt"{frameDuration.toCentiSeconds=}"
+  echo execProcess("magick.exe", options = {poUsePath}, args = [
+   "-delay", $frameDuration.toCentiSeconds,
+    fmt"{dir}/*.svg", outputPath,
+  ])

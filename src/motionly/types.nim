@@ -43,11 +43,11 @@ type
 
   SVGArc* = ref object of SVGNode
 
-  Percent* = range[0.0 .. 100.0]
+  Progress* = range[0.0 .. 1.0]
   MS* = float
 
-  EasingFn* = proc(timeProgress: Percent): Percent {.nimcall.}
-  UpdateFn* = proc(animationProgress: Percent) {.closure.}
+  EasingFn* = proc(timeProgress: Progress): Progress {.nimcall.}
+  UpdateFn* = proc(animationProgress: Progress) {.closure.}
 
   Transition* = object
     totalTime*: MS
