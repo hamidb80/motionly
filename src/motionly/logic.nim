@@ -23,7 +23,7 @@ func sort*(tl: var TimeLine) =
 func linearEasing(p: Progress): Progress =
   p
 
-func toCentiSeconds(ms: MS): int =
+func toMagickFrameDelay(ms: MS): int =
   (ms / 10).ceil.toint.max(2)
 
 func toFn*(e: CommonEasings): EasingFn =
@@ -106,8 +106,7 @@ proc save*(
 
       currentTime += frameDuration
 
-  # debugEcho fmt"{frameDuration.toCentiSeconds=}"
   echo execProcess("magick.exe", options = {poUsePath}, args = [
-   "-delay", $frameDuration.toCentiSeconds,
+   "-delay", $frameDuration.toMagickFrameDelay,
     fmt"{dir}/*.svg", outputPath,
   ])
