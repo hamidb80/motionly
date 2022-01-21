@@ -1,8 +1,8 @@
 import std/[sequtils, strutils, strformat, tables, macros]
 import macroplus
-import motionly/[meta, types, ir, logic]
+import motionly/[meta, types, ir, logic, easing]
 
-export ir, types, logic
+export ir, types, logic, easing
 
 func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
   assert n.kind in {nnkCall, nnkInfix, nnkCommand}, $n.kind

@@ -1,5 +1,5 @@
 import std/[os, osproc, strformat, tables, algorithm, math]
-import types, ir
+import types, ir, easing
 
 func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
   if n.attrs.getOrDefault("id", "") == id:
