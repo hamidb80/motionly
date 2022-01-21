@@ -1,14 +1,18 @@
-import std/[sequtils, strutils, strformat, tables]
-import macros, macroplus
+import std/[sequtils, strutils, strformat, tables, macros]
+import macroplus
 import motionly/[meta, types, ir, utils, logic]
 
 export ir, types, logic
 
 proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
-  let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
+  let nodes = ir.children.mapIt parseIRImpl(it, nil, parserMap)
 
   if ir.tag in parserMap:
     result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
+
+    for n in nodes:
+      n.parent = result
+
   else:
     raise newException(ValueError, "no such parser for tag name: " & ir.tag)
 
