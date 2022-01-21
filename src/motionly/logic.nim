@@ -44,11 +44,10 @@ func applyTransition*(u: UpdateFn, len: MS, e: CommonEasings): Transition =
 func percentLimit(n: float): Percent =
   min(n, 100.0)
 
-const fullTimeRange = 0.ms .. 100_000.ms
 proc save*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, size: Point,
-  preview = fullTimeRange, repeat = 1
+  preview = 0.ms .. 10_000.ms, repeat = 1
 ) =
   assert isSorted tl
 
@@ -61,7 +60,7 @@ proc save*(
   while tli <= tl.high or activeAnimations.len != 0:
     block collectNewAnimations:
       var newAnimations: Recording
-      
+
       while tli <= tl.high:
         if currentTime >= tl[tli].startTime:
           tl[tli].fn(stage, newAnimations)
@@ -91,6 +90,6 @@ proc save*(
       # i mean there is possiblity for currentTime to jump over preview range
 
       if currentTime in preview:
-        discard 
+        discard
 
     currentTime += frameDuration
