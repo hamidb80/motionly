@@ -1,5 +1,6 @@
 import std/[sequtils, tables, strutils, algorithm]
-import types, utils
+import macros, macroplus
+import types, utils, meta
 
 proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
   let nodes = ir.children.mapIt parseIRImpl(it, result, parserMap)
@@ -36,32 +37,19 @@ func findId*(n: SVGNode, id: string): SVGNode =
 
 func sort*(tl: var TimeLine) =
   tl.sort proc (k1, k2: KeyFrame): int =
-    cmp(k1.timeRange.a, k2.timeRange.a)
+    cmp(k1.startTime, k2.startTime)
 
-type
-  CommonEasings* = enum
-    ## see https://easings.net/
-    eInSine, eOutSine, eInOutSine
-    eInQuad, eOutQuad, eInOutQuad
-    eInCubic, eOutCubic, eInOutCubic
-    eInQuart, eOutQuart, eInOutQuart
-    eInQuint, eOutQuint, eInOutQuint
-    eInExpo, eOutExpo, eInOutExpo
-    eInCirc, eOutCirc, eInOutCirc
-    eInBack, eOutBack, eInOutBack
-    eInElastic, eOutElastic, eInOutElastic
-    eInBoune, eOutBoune, eInOutBounce
+proc linearEasing(p: Percent): Percent =
+  p
 
-proc sinin(total, elapsed: int): Percent =
-  discard
+func toFn(e: CommonEasings): EasingFn =
+  case e:
+  of eLinear: linearEasing
+  else:
+    raise newException(ValueError, "corresponding easing function is not defined yet")
 
-func applyTransition*(
-  u: UpdateFn, len: int, e: EasingFn
-): Transition =
+func applyTransition*(u: UpdateFn, len: int, e: EasingFn): Transition =
   Transition(totalTime: len, easingFn: e, updateFn: u)
-
-func tofn(e: CommonEasings): EasingFn =
-  sinin
 
 func `~>`*(
   u: UpdateFn, props: tuple[len: int, easing: CommonEasings]
@@ -72,10 +60,21 @@ func toAnimation*(t: Transition, startTime: int): Animation =
   Animation(start: startTime, t: t)
 
 template register*(t: Transition): untyped {.dirty.} =
-  cntx.add t.toAnimation(dt.a)
+  cntx.add t.toAnimation(dt)
+
+template r*(t: Transition): untyped {.dirty.} =
+  register t
+
+proc resolveFlowCall(flowCall: NimNode): NimNode =
+  assert flowCall.kind == nnkCall
+  flowCall.insertMulti(CallIdent + 1, "commonStage".ident, "cntx".ident)
+  flowCall
+
+macro `!`*(flowCall): untyped =
+  ## for calling flows
+  resolveFlowCall(flowCall)
 
 const allFrames = (-1) .. (-1)
-
 proc save*(
   tl: TimeLine, outputPath: string, frameRate: int, size: Point,
   preview = allFrames, repeat = 1

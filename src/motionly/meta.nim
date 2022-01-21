@@ -34,3 +34,7 @@ func castSafety*(code: NimNode): NimNode=
     {.cast(noSideEffect).}:
       {.cast(gcsafe).}:
         `code`
+
+proc insertMulti*(main: NimNode, index: int, nodes: varargs[NimNode])=
+  for i in countdown(nodes.high, 0):
+    main.insert(index, nodes[i])

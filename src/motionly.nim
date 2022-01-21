@@ -133,9 +133,6 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     `varname`.canvas = `parseIR`(`stageIdent`, `parserMap`)
     `idGets`
 
-  debugecho "---------------"
-  debugecho repr result
-
 macro defStage*(stageConfig: untyped, parserMap: typed, body): untyped =
   return toSVGTree(stageConfig, parserMap, body)
 
@@ -157,18 +154,18 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
   var
     timelineIR: seq[tuple[timeRange, fn: NimNode]]
     procDefs = newStmtList()
-    hasBefore = false
 
   for i, entity in body:
-    template addTimeline(what2add): untyped {.dirty.} =
-      entity.expectLen(3)
+    template add2Timeline(timeRange): untyped {.dirty.} =
+      assert entity.len in [2, 3]
       let
         stgName = ident fmt"timeRange_{i}"
         sident = ident "stage"
         dti = ident "dt"
         defs = quote do:
-          let `sident` {.used.} = (typeof `stageVar`)(commonStage)
-          let `dti` {.used.} = `what2add`
+          let 
+            `sident` {.used.} = (typeof `stageVar`)(commonStage)
+            `dti` {.used.} = len(`timeRange`)
 
       procDefs.add newProc(
         stgName,
@@ -177,7 +174,8 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
           newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
         ]).toseq,
         newStmtList(defs, resolvedBody))
-      timelineIR.add (what2add, stgName)
+
+      timelineIR.add (timeRange[InfixLeftSide], stgName)
 
     case entity.kind:
     of nnkCommand, nnkCall:
@@ -186,18 +184,31 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         resolvedBody = castSafety replaceStageComponents(entity[CommandBody])
 
       case name:
-      # of "before":
-      #   procDefs.add newProc("before".ident, body = resolvedBody)
-      #   hasBefore = true
+      of "before":
+        let timeRange = quote: -1 .. -1
+        add2Timeline(timeRange)
 
-      # of "flow":
-      #   procDefs.add newProc(entity[1], body = resolvedBody)
+      of "flow":
+        let
+          flowName = entity[1][ObjConstrIdent]
+          args = entity[1][ObjConstrFields].mapIt newTree(nnkExprColonExpr, newIdentDefs(it[0], it[1]))
+          sident = ident "stage"
+          defs = quote do:
+            let `sident` {.used.} = (typeof `stageVar`)(commonStage)
+
+        procDefs.add newProc(
+          flowName,
+          genFormalParams(newEmptyNode(), @[
+            newIdentDefs("commonStage".ident, "SVGStage".ident),
+            newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
+          ] & args).toseq,
+          newStmtList(defs, resolvedBody))
 
       of "on":
-        addTimeline entity[1]
+        add2Timeline entity[1]
 
       of "at":
-        addTimeline infix(entity[1], "..", entity[1])
+        add2Timeline infix(entity[1], "..", entity[1])
 
       else:
         error "invalid entity name: " & name
@@ -211,9 +222,6 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     `procDefs`
     var `timelineVar`: `TimeLine` = @`tb`
     `timelineVar`.sort ## sort before usage
-
-  debugEcho "++++++++++++++"
-  debugEcho repr result
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)

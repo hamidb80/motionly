@@ -3,6 +3,19 @@ import tables
 # TODO use `strtabs` instead of `tables
 
 type
+  ## IR :: Intermediate representation | a bridge between compile time and runtime
+  IRNode* = object
+    tag*: string
+    attrs*: seq[(string, string)]
+    children*: seq[IRNode]
+
+  IRParser* = proc(
+    tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+  ): SVGNode {.nimcall.}
+
+  ParserMap* = Table[string, IRParser] # tag name => parser func
+  ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
+
   Point* = object
     x*, y*: float
 
@@ -27,27 +40,11 @@ type
 
   SVGArc* = ref object of SVGNode
 
-  ## IR :: Intermediate representation
-  IRNode* = object
-    tag*: string
-    attrs*: seq[(string, string)]
-    children*: seq[IRNode]
-
   SVGStage* = ref object of RootObj
     canvas*: SVGCanvas
 
-  IRParser* = proc(
-    tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
-  ): SVGNode {.nimcall.}
-
-  ParserMap* = Table[string, IRParser] # tag name => parser func
-
-  ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
-
-  State* = ref object of RootObj
-
-  EasingFn* = proc(total, elapsed: int): Percent {.nimcall.}
-  UpdateFn* = proc(progress: Percent): SVGNode {.closure.}
+  EasingFn* = proc(timeProgress: Percent): Percent {.nimcall.}
+  UpdateFn* = proc(animationProgress: Percent): SVGNode {.closure.}
 
   Transition* = object
     totalTime*: int
@@ -61,12 +58,27 @@ type
   Recording* = seq[Animation]
 
   KeyFrame* = tuple
-    timeRange: HSlice[int, int]
+    startTime: int
     fn: proc(commonStage: SVGStage, cntx: var Recording) {.nimcall.}
 
   TimeLine* = seq[KeyFrame]
+
+  CommonEasings* = enum
+    ## see https://easings.net/
+    eLinear
+    eInSine, eOutSine, eInOutSine
+    eInQuad, eOutQuad, eInOutQuad
+    eInCubic, eOutCubic, eInOutCubic
+    eInQuart, eOutQuart, eInOutQuart
+    eInQuint, eOutQuint, eInOutQuint
+    eInExpo, eOutExpo, eInOutExpo
+    eInCirc, eOutCirc, eInOutCirc
+    eInBack, eOutBack, eInOutBack
+    eInElastic, eOutElastic, eInOutElastic
+    eInBoune, eOutBoune, eInOutBounce
 
   Percent* = range[0.0 .. 100.0]
   ms* = int
   px* = float
   fps* = int
+
