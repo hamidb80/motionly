@@ -21,5 +21,4 @@ defTimeline timeline, mystage:
     register @box.move(p(0, 0) .. p(100, 100)) ~> (dt, eOutCubic)
 
 
-timeline.save("./temp/out.gif", mystage,
-  100.fps, preview = 0.ms .. 300.ms)
+timeline.save("./temp/out.gif", mystage, 50.fps)

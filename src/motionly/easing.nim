@@ -2,140 +2,105 @@ import math
 import types
 
 ## see real examples here: https://easings.net/
-## code converted from: https://github.com/nicolausYes/easing-functions
-
-const PI2 = PI / 2
 
 func elinear*(p: Progress): Progress =
   toProgress p
 
-func eInSine*(t: Progress): Progress =
-  toProgress sin(PI2 * t)
+func eInSine*(p: Progress): Progress =
+  toProgress 1 - cos((p * PI) / 2)
 
-func eOutSine*(t: Progress): Progress =
-  toProgress 1 + sin(PI2 * (t - 1.0))
+func eOutSine*(p: Progress): Progress =
+  toProgress sin((p * PI) / 2)
 
-func eInOutSine*(t: Progress): Progress =
-  toProgress 0.5 * (1 + sin(PI * (t - 0.5)))
+func eInOutSine*(p: Progress): Progress =
+  toProgress -(cos(PI * p) - 1) / 2
 
-func eInQuad*(t: Progress): Progress =
-  toProgress t * t
+func eInQuad*(p: Progress): Progress =
+  toProgress p * p
 
-func eOutQuad*(t: Progress): Progress =
-  toProgress t * (2 - t)
+func eOutQuad*(p: Progress): Progress =
+  toProgress 1 - (1 - p).pow 2
 
-func eInOutQuad*(t: Progress): Progress =
+func eInOutQuad*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      2.0 * t * t
+    if p < 0.5:
+      2 * p * p
     else:
-      t * (4 - 2 * t) - 1
+      1 - pow(-2 * p + 2, 2) / 2
 
-func eInCubic*(t: Progress): Progress =
-  toProgress t * t * t
+func eInCubic*(p: Progress): Progress =
+  toProgress p.pow 3
 
-func eOutCubic*(t: Progress): Progress =
-  toProgress 1 + (t-1).pow 3
+func eOutCubic*(p: Progress): Progress =
+  toProgress 1 - pow(1 - p, 3)
 
-func eInOutCubic*(t: Progress): Progress =
-  # FIXME wrong result
+func eInOutCubic*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      4 * t * t * t
+    if p < 0.5:
+      4 * p.pow 3
     else:
-      1 + (t-1) * (2 * (t-2)).pow(2)
+      1 - pow(-2 * p + 2, 3) / 2
 
-func eInQuart*(t: Progress): Progress =
-  toProgress t.pow 4
+func eInQuart*(p: Progress): Progress =
+  toProgress p.pow 4
 
-func eOutQuart*(t: Progress): Progress =
-  toProgress 1 - (t-1).pow 4
+func eOutQuart*(p: Progress): Progress =
+  toProgress 1 - (p-1).pow 4
 
-func eInOutQuart*(t: Progress): Progress =
+func eInOutQuart*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      8 * (t-1).pow 4
+    if p < 0.5:
+      8 * p.pow 4
     else:
-      1 - 8 * (t-1).pow 4
+      1 - pow(-2 * p + 2, 4) / 2
 
 func eInQuint*(t: Progress): Progress =
   toProgress t.pow 5
 
-func eOutQuint*(t: Progress): Progress =
-  toProgress 1 + t * (t-1).pow 4
+func eOutQuint*(p: Progress): Progress =
+  toProgress 1 - pow(1 - p, 5)
 
-func eInOutQuint*(t: Progress): Progress =
+func eInOutQuint*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      16 * t.pow 5
+    if p < 0.5:
+      16 * p.pow(5)
     else:
-      1 + 16 * (t-1).pow 4
+      1 - pow(-2 * p + 2, 5) / 2
 
-func eInExpo*(t: Progress): Progress =
-  toProgress (pow(2, 8 * t) - 1) / 255
-
-func eOutExpo*(t: Progress): Progress =
-  toProgress 1 - pow(2, -8 * t)
-
-func eInOutExpo*(t: Progress): Progress =
+func eInExpo*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      (pow(2, 16 * t) - 1) / 510
+    if p == 0:
+      0.0
     else:
-      1 - 0.5 * pow(2, -16 * (t - 0.5))
+      pow(2, 10 * p - 10)
 
-func eInCirc*(t: Progress): Progress =
-  toProgress 1 - sqrt(1 - t)
-
-func eOutCirc*(t: Progress): Progress =
-  toProgress sqrt t
-
-func eInOutCirc*(t: Progress): Progress =
+func eOutExpo*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      (1 - sqrt(1 - 2 * t)) * 0.5
+    if p == 1:
+      1.0
     else:
-      (1 + sqrt(2 * t - 1)) * 0.5
+      1 - pow(2, -10 * p)
 
-func eInBack*(t: Progress): Progress =
-  toProgress t * t * (E * t - PI2)
-
-func eOutBack*(t: Progress): Progress =
-  toProgress 1 + (t-1).pow 2 * (E * (t-1) + PI2)
-
-func eInOutBack*(t: Progress): Progress =
+func eInOutExpo*(p: Progress): Progress =
   toProgress:
-    if t < 0.5:
-      t * t * (7 * t - 2.5) * 2
+    if p == 0.0:
+      0.0
+    elif p == 1.0:
+      1.0
+    elif p < 0.5:
+      pow(2, 20 * p - 10) / 2
     else:
-      1 + (t-1).pow(2) * 2 * (7 * (t-1) + 2.5)
+      (2 - pow(2, -20 * p + 10)) / 2
 
-func eInElastic*(t: Progress): Progress =
-  toProgress t.pow(4) * sin(t * PI * 4.5)
+func eInCirc*(p: Progress): Progress =
+  toProgress 1 - sqrt(1 - pow(p, 2))
 
-func eOutElastic*(t: Progress): Progress =
-  toProgress 1 - (t-1).pow(4) * cos(t * PI * 4.5)
+func eOutCirc*(p: Progress): Progress =
+  toProgress sqrt(1 - pow(p - 1, 2))
 
-func eInOutElastic*(t: Progress): Progress =
+func eInOutCirc*(p: Progress): Progress =
   toProgress:
-    if t < 0.45:
-      8 * t.pow(4) * sin(t * PI * 9)
-    elif t < 0.55:
-      0.5 + 0.75 * sin(t * PI * 4)
+    if p < 0.5:
+      (1 - sqrt(1 - pow(2 * p, 2))) / 2
     else:
-      1 - 8 * (t - 1).pow(4) * sin(t * PI * 9)
-
-func eInBounce*(t: Progress): Progress =
-  toProgress:
-    pow(2, 6 * (t - 1)) * abs(sin(t * PI * 3.5))
-
-func eOutBounce*(t: Progress): Progress =
-  toProgress:
-    1 - pow(2, -6 * t) * abs(cos(t * PI * 3.5))
-
-func eInOutBounce*(t: Progress): Progress =
-  toProgress:
-    if t < 0.5:
-      8 * pow(2, 8 * (t - 1)) * abs(sin(t * PI * 7))
-    else:
-      1 - 8 * pow(2, -8 * t) * abs(sin(t * PI * 7))
+      (sqrt(1 - pow(-2 * p + 2, 2)) + 1) / 2

@@ -41,6 +41,7 @@ proc save*(
   preview = 0.ms .. 10_000.ms, justFirstFrame = false,
   keepUseless = false, repeat = 1,
 ) =
+  ## note: the best fps for magick is 50.fps
   assert isSorted tl
 
   let

@@ -16,6 +16,7 @@ here, you code animations!
 **useful links**:
 * [svg tutorial](http://tutorials.jenkov.com/svg/index.html)
 * [how to save svg to png](https://imagemagick.org/script/command-line-processing.php)
+* [save to .mp4](https://www.youtube.com/watch?v=thDma0lO0U8)
 
 example: 
 ```nim
