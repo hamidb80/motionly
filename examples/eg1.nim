@@ -1,5 +1,6 @@
-import motionly, tables, sugar, strutils, macros
-
+import std/[tables, sugar, strutils]
+import motionly
+import macros # for expandMacros
 
 func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
   for k, v in t2:
@@ -64,8 +65,6 @@ expandMacros:
       discard "blue"
       !reset()
 
-    # # flows are just procs
-    
     on 0.ms .. 100.ms:
       # let k = move(@box, P(10.px, 100.px))
       # k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
@@ -74,14 +73,11 @@ expandMacros:
     at 130.ms:
       discard "at"
 
-    # on 150.ms .. 200.ms:
-    #   scale(@blocks[0], 1.n:1).transition(dt, eCricleOut)
-    #   scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
-
     on 170.ms .. 210.ms:
       register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
 
 echo timeline.join "\n"
 
-timeline.save("out.gif", mystage, 120.fps, p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)
+timeline.save("out.gif", mystage, 120.fps,
+  p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)

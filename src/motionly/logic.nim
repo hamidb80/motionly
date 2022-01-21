@@ -101,7 +101,7 @@ proc save*(
       var newAnimations: Recording
       
       while tli <= tl.high:
-        if currentTime >= tl[tli].startTime.float:
+        if currentTime >= tl[tli].startTime:
           tl[tli].fn(stage, newAnimations)
           tli.inc
         else: break
@@ -115,7 +115,7 @@ proc save*(
       var anims: Recording
       for a in activeAnimations:
         let timeProgress = percentLimit:
-          (currentTime - a.startTime) / a.t.totalTime.float * 100
+          (currentTime - a.startTime) / a.t.totalTime * 100
 
         a.t.updateFn(a.t.easingFn(timeProgress))
 
