@@ -53,7 +53,8 @@ func genFrameFileName(fname: string, index: int): string =
 proc save*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, scale = 1.0,
-  preview = 0.ms .. 10_000.ms, repeat = 1, justFirstFrame = false
+  preview = 0.ms .. 10_000.ms, justFirstFrame = false,
+  keepUseless = false, repeat = 1,
 ) =
   assert isSorted tl
 
@@ -68,7 +69,9 @@ proc save*(
     savedCount = 0
 
   block loop:
-    while (tli <= tl.high or activeAnimations.len != 0) and currentTime <= preview.b:
+    while (
+        keepUseless or tli <= tl.high or activeAnimations.len != 0
+      ) and currentTime <= preview.b:
       block collectNewAnimations:
         var newAnimations: Recording
 
@@ -91,7 +94,7 @@ proc save*(
 
           a.t.updateFn(a.t.easingFn(timeProgress))
 
-          if timeProgress != 100.0:
+          if timeProgress != Progress.high:
             anims.add a
 
         activeAnimations = anims
