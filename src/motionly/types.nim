@@ -66,20 +66,6 @@ type
 
   TimeLine* = seq[KeyFrame]
 
-  CommonEasings* = enum
-    ## see https://easings.net/
-    eLinear
-    eInSine, eOutSine, eInOutSine
-    eInQuad, eOutQuad, eInOutQuad
-    eInCubic, eOutCubic, eInOutCubic
-    eInQuart, eOutQuart, eInOutQuart
-    eInQuint, eOutQuint, eInOutQuint
-    eInExpo, eOutExpo, eInOutExpo
-    eInCirc, eOutCirc, eInOutCirc
-    eInBack, eOutBack, eInOutBack
-    eInElastic, eOutElastic, eInOutElastic
-    eInBounce, eOutBounce, eInOutBounce
-
   PX* = float
   FPS* = float
 

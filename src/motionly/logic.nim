@@ -32,9 +32,6 @@ func toAnimation*(t: Transition): Animation =
 func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
   Transition(totalTime: len, easingFn: e, updateFn: u)
 
-func applyTransition*(u: UpdateFn, len: MS, e: CommonEasings): Transition =
-  Transition(totalTime: len, easingFn: e.tofn, updateFn: u)
-
 func genFrameFileName(fname: string, index: int): string =
   fmt"{fname}_{index:08}.svg"
 

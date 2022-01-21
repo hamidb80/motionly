@@ -1,42 +1,43 @@
 import math
 import types
 
-## from: https://github.com/nicolausYes/easing-functions
+## see real examples here: https://easings.net/
+## code converted from: https://github.com/nicolausYes/easing-functions
 
 const PI2 = PI / 2
 
-func linearEasing*(p: Progress): Progress =
+func elinear*(p: Progress): Progress =
   toProgress p
 
-func easeInSine*(t: Progress): Progress =
+func eInSine*(t: Progress): Progress =
   toProgress sin(PI2 * t)
 
-func easeOutSine*(t: Progress): Progress =
+func eOutSine*(t: Progress): Progress =
   toProgress 1 + sin(PI2 * (t - 1.0))
 
-func easeInOutSine*(t: Progress): Progress =
+func eInOutSine*(t: Progress): Progress =
   toProgress 0.5 * (1 + sin(PI * (t - 0.5)))
 
-func easeInQuad*(t: Progress): Progress =
+func eInQuad*(t: Progress): Progress =
   toProgress t * t
 
-func easeOutQuad*(t: Progress): Progress =
+func eOutQuad*(t: Progress): Progress =
   toProgress t * (2 - t)
 
-func easeInOutQuad*(t: Progress): Progress =
+func eInOutQuad*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       2.0 * t * t
     else:
       t * (4 - 2 * t) - 1
 
-func easeInCubic*(t: Progress): Progress =
+func eInCubic*(t: Progress): Progress =
   toProgress t * t * t
 
-func easeOutCubic*(t: Progress): Progress =
+func eOutCubic*(t: Progress): Progress =
   toProgress 1 + (t-1).pow 3
 
-func easeInOutCubic*(t: Progress): Progress =
+func eInOutCubic*(t: Progress): Progress =
   # FIXME wrong result
   toProgress:
     if t < 0.5:
@@ -44,78 +45,78 @@ func easeInOutCubic*(t: Progress): Progress =
     else:
       1 + (t-1) * (2 * (t-2)).pow(2)
 
-func easeInQuart*(t: Progress): Progress =
+func eInQuart*(t: Progress): Progress =
   toProgress t.pow 4
 
-func easeOutQuart*(t: Progress): Progress =
+func eOutQuart*(t: Progress): Progress =
   toProgress 1 - (t-1).pow 4
 
-func easeInOutQuart*(t: Progress): Progress =
+func eInOutQuart*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       8 * (t-1).pow 4
     else:
       1 - 8 * (t-1).pow 4
 
-func easeInQuint*(t: Progress): Progress =
+func eInQuint*(t: Progress): Progress =
   toProgress t.pow 5
 
-func easeOutQuint*(t: Progress): Progress =
+func eOutQuint*(t: Progress): Progress =
   toProgress 1 + t * (t-1).pow 4
 
-func easeInOutQuint*(t: Progress): Progress =
+func eInOutQuint*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       16 * t.pow 5
     else:
       1 + 16 * (t-1).pow 4
 
-func easeInExpo*(t: Progress): Progress =
+func eInExpo*(t: Progress): Progress =
   toProgress (pow(2, 8 * t) - 1) / 255
 
-func easeOutExpo*(t: Progress): Progress =
+func eOutExpo*(t: Progress): Progress =
   toProgress 1 - pow(2, -8 * t)
 
-func easeInOutExpo*(t: Progress): Progress =
+func eInOutExpo*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       (pow(2, 16 * t) - 1) / 510
     else:
       1 - 0.5 * pow(2, -16 * (t - 0.5))
 
-func easeInCirc*(t: Progress): Progress =
+func eInCirc*(t: Progress): Progress =
   toProgress 1 - sqrt(1 - t)
 
-func easeOutCirc*(t: Progress): Progress =
+func eOutCirc*(t: Progress): Progress =
   toProgress sqrt t
 
-func easeInOutCirc*(t: Progress): Progress =
+func eInOutCirc*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       (1 - sqrt(1 - 2 * t)) * 0.5
     else:
       (1 + sqrt(2 * t - 1)) * 0.5
 
-func easeInBack*(t: Progress): Progress =
+func eInBack*(t: Progress): Progress =
   toProgress t * t * (E * t - PI2)
 
-func easeOutBack*(t: Progress): Progress =
+func eOutBack*(t: Progress): Progress =
   toProgress 1 + (t-1).pow 2 * (E * (t-1) + PI2)
 
-func easeInOutBack*(t: Progress): Progress =
+func eInOutBack*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       t * t * (7 * t - 2.5) * 2
     else:
       1 + (t-1).pow(2) * 2 * (7 * (t-1) + 2.5)
 
-func easeInElastic*(t: Progress): Progress =
+func eInElastic*(t: Progress): Progress =
   toProgress t.pow(4) * sin(t * PI * 4.5)
 
-func easeOutElastic*(t: Progress): Progress =
+func eOutElastic*(t: Progress): Progress =
   toProgress 1 - (t-1).pow(4) * cos(t * PI * 4.5)
 
-func easeInOutElastic*(t: Progress): Progress =
+func eInOutElastic*(t: Progress): Progress =
   toProgress:
     if t < 0.45:
       8 * t.pow(4) * sin(t * PI * 9)
@@ -124,51 +125,17 @@ func easeInOutElastic*(t: Progress): Progress =
     else:
       1 - 8 * (t - 1).pow(4) * sin(t * PI * 9)
 
-func easeInBounce*(t: Progress): Progress =
+func eInBounce*(t: Progress): Progress =
   toProgress:
     pow(2, 6 * (t - 1)) * abs(sin(t * PI * 3.5))
 
-func easeOutBounce*(t: Progress): Progress =
+func eOutBounce*(t: Progress): Progress =
   toProgress:
     1 - pow(2, -6 * t) * abs(cos(t * PI * 3.5))
 
-func easeInOutBounce*(t: Progress): Progress =
+func eInOutBounce*(t: Progress): Progress =
   toProgress:
     if t < 0.5:
       8 * pow(2, 8 * (t - 1)) * abs(sin(t * PI * 7))
     else:
       1 - 8 * pow(2, -8 * t) * abs(sin(t * PI * 7))
-
-func toFn*(e: CommonEasings): EasingFn =
-  case e:
-  of eLinear: linearEasing
-  of eInSine: easeInSine
-  of eOutSine: easeOutSine
-  of eInOutSine: easeInOutSine
-  of eInQuad: easeInQuad
-  of eOutQuad: easeOutQuad
-  of eInOutQuad: easeInOutQuad
-  of eInCubic: easeInCubic
-  of eOutCubic: easeOutCubic
-  of eInOutCubic: easeInOutCubic
-  of eInQuart: easeInQuart
-  of eOutQuart: easeOutQuart
-  of eInOutQuart: easeInOutQuart
-  of eInQuint: easeInQuint
-  of eOutQuint: easeOutQuint
-  of eInOutQuint: easeInOutQuint
-  of eInExpo: easeInExpo
-  of eOutExpo: easeOutExpo
-  of eInOutExpo: easeInOutExpo
-  of eInCirc: easeInCirc
-  of eOutCirc: easeOutCirc
-  of eInOutCirc: easeInOutCirc
-  of eInBack: easeInBack
-  of eOutBack: easeOutBack
-  of eInOutBack: easeInOutBack
-  of eInElastic: easeInElastic
-  of eOutElastic: easeOutElastic
-  of eInOutElastic: easeInOutElastic
-  of eInBounce: easeInBounce
-  of eOutBounce: easeOutBounce
-  of eInOutBounce: easeInOutBounce

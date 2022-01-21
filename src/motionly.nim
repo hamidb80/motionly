@@ -237,7 +237,7 @@ macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
 # ---------------------------------------------------------
 
 func `~>`*(
-  u: UpdateFn, props: tuple[len: MS, easing: CommonEasings]
+  u: UpdateFn, props: tuple[len: MS, easing: EasingFn]
 ): Transition =
   u.applyTransition(props.len, props.easing)
 
