@@ -1,4 +1,4 @@
-import std/[sequtils, strutils, strformat, tables, macros]
+import std/[sequtils, strformat, tables, macros]
 import macroplus
 import motionly/[meta, types, ir, logic, easing]
 

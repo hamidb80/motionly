@@ -1,14 +1,15 @@
 import motionly
 import helper
 
-func move(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
-  let
-    s = (SVGRect)(st)
-    v = states.b - states.a
+method move(st: SVGNode, states: HSlice[Point, Point]): UpdateFn {.base.} =
+  raise newException(ValueError, "not implemented")
 
-  proc updater(p: Progress) =
-    s.position = v * p
-
+method move(st: SVGRect, states: HSlice[Point, Point]): UpdateFn =
+  let v = states.b - states.a
+  
+  proc updater(p: Progress) = 
+    st.position = v * p
+  
   updater
 
 # -------------------------------

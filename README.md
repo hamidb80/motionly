@@ -83,6 +83,9 @@ let
 recording.save("out.gif", 120.fps, scale=5.0, preview = 0.ms .. 1000.ms, repeat= 1)
 ```
 
+## TODOs:
+* [ ] add ffmpeg backend for more than 50.fps support
+
 ## Goals:
 * [ ] add svg manipulation like: scale, transform, ... (see this)[https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform]
 * [ ] add deep copy or delete from screen
