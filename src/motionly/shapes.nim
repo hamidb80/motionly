@@ -51,6 +51,21 @@ func parseCircle*(
 
   acc
 
+func parseGroup*(
+  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+): SVGNode =
+  var acc = SVGGroup(name: "g")
+
+  for (key, val) in attrs:
+    case key:
+    of "x": acc.x = parseFloat val
+    of "y": acc.y = parseFloat val
+    else:
+      acc.attrs[key] = val
+
+  acc
+
+
 func parseRaw*[S: SVGNode](
   tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
 ): SVGNode =

@@ -25,13 +25,14 @@ proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
   result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
 
 let baseParserMap*: ParserMap = toTable {
+  "svg": parseRaw[SVGCanvas],
+  "group": parseGroup,
+  "g": parseGroup,
+
   "rect": parseRect,
   "circle": parseCircle,
-  "arc": parseRaw[SVGArc],
-  "group": parseRaw[SVGGroup], # FIXME: "group" is not a tag name, use "g" instead
-  "g": parseRaw[SVGGroup],
-  "path": parseRaw[SVGGroup],
-  "svg": parseRaw[SVGCanvas],
+  # "arc": parseRaw[SVGArc],
+  # "path": parseRaw[SVGGroup],
 }
 
 method toIR(n: SVGNode): IRNode {.base.} =
