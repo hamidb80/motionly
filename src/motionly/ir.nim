@@ -1,5 +1,5 @@
 import std/[strformat, sequtils, strutils, tables, strtabs, xmlparser, xmltree]
-import types, utils
+import types, utils, shapes
 
 proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
   let nodes = ir.children.mapIt parseIRImpl(it, nil, parserMap)
@@ -22,49 +22,7 @@ proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
     width: attrs["width"].parseFloat,
     height: attrs["height"].parseFloat,
   )
-
   result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
-
-func parseRect*(
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
-): SVGNode =
-  var acc = SVGRect(name: tag)
-
-  for (key, val) in attrs:
-    case key:
-    of "x": acc.position.x = parseFloat val
-    of "y": acc.position.y = parseFloat val
-    of "width": acc.width = parseFloat val
-    of "height": acc.height = parseFloat val
-    else:
-      acc.attrs[key] = val
-
-  acc
-
-func parseCircle*(
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
-): SVGNode =
-  var acc = SVGCircle(name: tag)
-
-  for (key, val) in attrs:
-    case key:
-    of "cx": acc.center.x = parseFloat val
-    of "cy": acc.center.y = parseFloat val
-    of "r": acc.radius = parseFloat val
-    else:
-      acc.attrs[key] = val
-
-  acc
-
-func parseRaw*[S: SVGNode](
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
-): SVGNode =
-  var acc = S(name: tag, nodes: children)
-
-  for (key, val) in attrs:
-    acc.attrs[key] = val
-
-  acc
 
 let baseParserMap*: ParserMap = toTable {
   "rect": parseRect,
@@ -75,20 +33,6 @@ let baseParserMap*: ParserMap = toTable {
   "path": parseRaw[SVGGroup],
   "svg": parseRaw[SVGCanvas],
 }
-
-method specialAttrs(n: SVGNode): Table[string, string] {.base.} = discard
-
-method specialAttrs(n: SVGCanvas): Table[string, string] =
-  {"width": $n.width, "height": $n.height}.toTable
-
-method specialAttrs(n: SVGCircle): Table[string, string] =
-  {"cx": $n.center.x, "cy": $n.center.y, "r": $n.radius}.toTable
-
-method specialAttrs(n: SVGRect): Table[string, string] =
-  {
-    "x": $n.position.x, "y": $n.position.y,
-    "width": $n.width, "height": $n.height
-  }.toTable
 
 method toIR(n: SVGNode): IRNode {.base.} =
   IRNode(
