@@ -78,7 +78,7 @@ type
     eInCirc, eOutCirc, eInOutCirc
     eInBack, eOutBack, eInOutBack
     eInElastic, eOutElastic, eInOutElastic
-    eInBoune, eOutBoune, eInOutBounce
+    eInBounce, eOutBounce, eInOutBounce
 
   PX* = float
   FPS* = float
@@ -90,3 +90,8 @@ func px*(i: int): PX = i.toFloat
 func px*(f: float): PX = f
 func fps*(i: int): FPS = i.toFloat
 func fps*(f: float): FPS = f
+
+func toProgress*(n: float): Progress =
+  if n > 1.0: 1.0
+  elif n < 0.0: 0.0
+  else: n

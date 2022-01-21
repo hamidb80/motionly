@@ -20,17 +20,8 @@ func cmp*(k1, k2: KeyFrame): int =
 func sort*(tl: var TimeLine) =
   tl.sort cmp
 
-func linearEasing(p: Progress): Progress =
-  p
-
 func toMagickFrameDelay(ms: MS): int =
   (ms / 10).ceil.toint.max(2)
-
-func toFn*(e: CommonEasings): EasingFn =
-  case e:
-  of eLinear: linearEasing
-  else:
-    raise newException(ValueError, "corresponding easing function is not defined yet: " & $e)
 
 func len*(rng: HSlice[float, float]): float =
   rng.b - rng.a
@@ -43,9 +34,6 @@ func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
 
 func applyTransition*(u: UpdateFn, len: MS, e: CommonEasings): Transition =
   Transition(totalTime: len, easingFn: e.tofn, updateFn: u)
-
-func progressLimit(n: float): Progress =
-  min(n, 1.0)
 
 func genFrameFileName(fname: string, index: int): string =
   fmt"{fname}_{index:08}.svg"
@@ -89,7 +77,7 @@ proc save*(
       block applyAndFilterAnimations:
         var anims: Recording
         for a in activeAnimations:
-          let timeProgress = progressLimit:
+          let timeProgress = toProgress:
             (currentTime - a.startTime) / a.t.totalTime
 
           a.t.updateFn(a.t.easingFn(timeProgress))
