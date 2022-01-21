@@ -83,8 +83,10 @@ type
   PX* = float
   FPS* = float
 
-
+# TODO write a macro for that
 func ms*(i: int): MS = i.toFloat
+func ms*(f: float): MS = f
 func px*(i: int): PX = i.toFloat
+func px*(f: float): PX = f
 func fps*(i: int): FPS = i.toFloat
-
+func fps*(f: float): FPS = f

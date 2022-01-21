@@ -1,6 +1,5 @@
 import std/[tables, sugar, strutils]
 import motionly
-import macros # for expandMacros
 
 func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
   for k, v in t2:
@@ -56,28 +55,27 @@ func myCoolAnimation(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
 func p(x, y: int): Point =
   Point(x: x.toFloat, y: y.toFloat)
 
-expandMacros:
-  defTimeline timeline, mystage:
-    flow reset():
-      discard "flow.reset"
+defTimeline timeline, mystage:
+  flow reset():
+    discard "flow.reset"
 
-    before:
-      discard "blue"
-      !reset()
+  before:
+    discard "blue"
+    !reset()
 
-    on 0.ms .. 100.ms:
-      # let k = move(@box, P(10.px, 100.px))
-      # k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
-      discard "first kf"
+  on 0.ms .. 100.ms:
+    # let k = move(@box, P(10.px, 100.px))
+    # k.transition(delay = 10.ms, duration = dt, easing = eCubicIn, after = reset)
+    discard "first kf"
 
-    at 130.ms:
-      discard "at"
+  at 130.ms:
+    discard "at"
 
-    on 170.ms .. 210.ms:
-      register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
+  on 170.ms .. 210.ms:
+    register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
 
 echo timeline.join "\n"
 
 timeline.save("out.gif", mystage, 120.fps,
-  p(1000, 400), preview = 0.ms .. 1000.ms, repeat = 1)
+  p(1000, 400), preview = 0.ms .. 1_000.ms, repeat = 1)
