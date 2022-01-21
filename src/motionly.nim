@@ -123,7 +123,7 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
       `cntxWrapper`* = ref object of `SVGStage`
         components*: `cntx`
 
-    let `stageIdent` = `IRNode`(
+    var `stageIdent` = `IRNode`(
       tag: "svg",
       attrs: @`args`,
       children: @`children`
@@ -145,7 +145,7 @@ func replaceStageComponents*(body: NimNode): NimNode =
   result = body
 
   for i, n in body.pairs:
-    if n.kind == nnkPrefix and n[0].strval == "@":
+    if n.kind == nnkPrefix and n[0].strval == "@" and n[1].kind == nnkIdent:
       let componentName = n[1]
       result[i] = quote:
         stage.components.`componentName`

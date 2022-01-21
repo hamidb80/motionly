@@ -6,6 +6,7 @@ proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
 
   if ir.tag in parserMap:
     result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
+    result.parent = parent
 
     for n in nodes:
       n.parent = result

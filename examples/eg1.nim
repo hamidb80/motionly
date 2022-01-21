@@ -1,9 +1,5 @@
-import std/[tables, sugar]
+import std/[tables]
 import motionly
-
-func update[K, V](t1: var Table[K, V], t2: Table[K, V]) =
-  for k, v in t2:
-    t1[k] = v
 
 type
   MyComponent = ref object of SVGNode
@@ -22,9 +18,8 @@ func parseMyComponent(
 
   acc
 
-let ff = baseParserMap.dup update totable {
-  "myComponent": parseMyComponent
-}
+var ff = baseParserMap
+ff["myComponent"] = parseMyComponent
 
 const
   posx = 10
@@ -74,5 +69,5 @@ defTimeline timeline, mystage:
   on 170.ms .. 210.ms:
     register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
-timeline.saveGif("./temp/out.gif", mystage, 120.fps, 
+timeline.saveGif("./temp/out.gif", mystage, 120.fps,
   preview = 0.ms .. 100.ms, repeat = 1)

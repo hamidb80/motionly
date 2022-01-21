@@ -20,6 +20,19 @@ type
   SVGArc* = ref object of SVGShape
 
 
+proc replaceNode*(n: var SVGNode, with: SVGNode) =
+  for c in n.parent.nodes.mitems:
+    if c == n:
+      c = with
+      c.parent = n.parent
+      n = with
+      return
+
+  raise newException(ValueError, "parent is not registered")
+
+proc `<-`*(n: var SVGNode, with: SVGNode) =
+  replaceNode(n, with)
+
 func parseRect*(
   tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
 ): SVGNode =
