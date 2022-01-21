@@ -35,7 +35,7 @@ func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
 func genFrameFileName(fname: string, index: int): string =
   fmt"{fname}_{index:08}.svg"
 
-proc save*(
+proc saveGif*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, scale = 1.0,
   preview = 0.ms .. 10_000.ms, justFirstFrame = false,

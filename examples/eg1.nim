@@ -49,7 +49,7 @@ defStage mystage(width = w, height = 200), ff:
 # --------------------------------
 
 func myCoolAnimation(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
-  proc updater(progress: Percent) = discard
+  proc updater(progress: Progress) = discard
   updater
 
 func p(x, y: int): Point =
@@ -74,5 +74,5 @@ defTimeline timeline, mystage:
   on 170.ms .. 210.ms:
     register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
-timeline.save("./temp/out.gif", mystage, 120.fps, 
+timeline.saveGif("./temp/out.gif", mystage, 120.fps, 
   preview = 0.ms .. 100.ms, repeat = 1)
