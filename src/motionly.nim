@@ -188,7 +188,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
 
       case name:
       of "before":
-        let timeRange = quote: -1 .. -1
+        let timeRange = quote: -1.ms .. -1.ms
         add2Timeline(timeRange)
 
       of "flow":
@@ -225,6 +225,10 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     `procDefs`
     var `timelineVar`: `TimeLine` = @`tb`
     `timelineVar`.sort ## sort before usage
+
+  debugEcho "=============="
+  debugEcho repr result
+  debugEcho "////////////////"
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)

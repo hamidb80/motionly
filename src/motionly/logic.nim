@@ -50,13 +50,16 @@ func toFn(e: CommonEasings): EasingFn =
   else:
     raise newException(ValueError, "corresponding easing function is not defined yet: " & $e)
 
-func applyTransition*(u: UpdateFn, len: int, e: EasingFn): Transition =
+func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
   Transition(totalTime: len, easingFn: e, updateFn: u)
 
 func `~>`*(
-  u: UpdateFn, props: tuple[len: int, easing: CommonEasings]
+  u: UpdateFn, props: tuple[len: MS, easing: CommonEasings]
 ): Transition =
   u.applyTransition(props.len, props.easing.tofn)
+
+func len*(rng: HSlice[float, float]): float=
+  rng.b - rng.a
 
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
@@ -79,7 +82,7 @@ macro `!`*(flowCall): untyped =
 func percentLimit(n: float): Percent =
   min(n, 100.0)
 
-const fullTimeRange = 0 .. 10_000
+const fullTimeRange = 0.ms .. 100_000.ms
 proc save*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, size: Point,
@@ -108,7 +111,7 @@ proc save*(
 
       activeAnimations.add newAnimations
 
-    block filteringAnimations:
+    block applyAndFilterAnimations:
       var anims: Recording
       for a in activeAnimations:
         let timeProgress = percentLimit:

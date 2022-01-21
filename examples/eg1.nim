@@ -79,7 +79,7 @@ expandMacros:
     #   scale(@blocks[0], 1.1) ~> (dt, eCricleOut)
 
     on 170.ms .. 210.ms:
-      register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10, eLinear)
+      register @box.myCoolAnimation(p(100, 100) .. p(0, 0)) ~> (10.ms, eLinear)
 
 
 echo timeline.join "\n"

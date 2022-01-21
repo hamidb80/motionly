@@ -43,11 +43,14 @@ type
 
   SVGArc* = ref object of SVGNode
 
+  Percent* = range[0.0 .. 100.0]
+  MS* = float
+
   EasingFn* = proc(timeProgress: Percent): Percent {.nimcall.}
   UpdateFn* = proc(animationProgress: Percent) {.closure.}
 
   Transition* = object
-    totalTime*: int
+    totalTime*: MS
     easingFn*: EasingFn
     updateFn*: UpdateFn
 
@@ -58,7 +61,7 @@ type
   Recording* = seq[Animation]
 
   KeyFrame* = tuple
-    startTime: int
+    startTime: MS
     fn: proc(commonStage: SVGStage, cntx: var Recording) {.nimcall.}
 
   TimeLine* = seq[KeyFrame]
@@ -77,12 +80,11 @@ type
     eInElastic, eOutElastic, eInOutElastic
     eInBoune, eOutBoune, eInOutBounce
 
-  Percent* = range[0.0 .. 100.0]
-  MS* = int
   PX* = float
   FPS* = float
 
-func ms*(i: int): MS = i
+
+func ms*(i: int): MS = i.toFloat
 func px*(i: int): PX = i.toFloat
 func fps*(i: int): FPS = i.toFloat
 
