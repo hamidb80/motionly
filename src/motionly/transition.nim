@@ -1,5 +1,8 @@
 import types, shapes
 
+#TODO add a animation option type for tweaking soething like
+# reset state after animation, end functions or ....
+
 proc tmove*(s: SVGNode, states: HSlice[Point, Point]): UpdateFn =
   let v = states.b - states.a
 

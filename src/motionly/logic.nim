@@ -122,6 +122,7 @@ proc saveGif*(
   justFirstFrame = false, keepUseless = false,
 ) =
   ## note: the best fps for magick is 50.fps
+  ## TODO apply FRAME LIMIT | 50 for GIF
   let
     frameDuration = 1000 / frameRate
     (dir, fname, _) = outputPath.splitFile
@@ -146,6 +147,7 @@ proc quickView*(
   preview = 0.ms .. 10_000.ms, repeat = 1,
   justFirstFrame = false, keepUseless = false,
 ) =
+  ## TODO apply FRAME LIMIT :: 60 for quickview
   let frameDuration = 1000 / frameRate
 
   var acc = ""
