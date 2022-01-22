@@ -70,11 +70,15 @@ func parseGroup*(
 func parseSVGCanvas*(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
-  SVGCanvas(name: "svg",
-    width: attrs["width"].parseInt,
-    height: attrs["height"].parseInt,
-    nodes: children
-  )
+  
+  var c = SVGCanvas(name: "svg", nodes: children)
+  for k, v in attrs:
+    case k:
+    of "width": c.width = v.parseInt
+    of "height": c.height = v.parseInt
+    else: c.attrs[k] = v
+
+  c
 
 func parseRaw*[S: SVGNode](
   tag: string, attrs: Table[string, string], children: seq[SVGNode]

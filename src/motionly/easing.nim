@@ -120,9 +120,9 @@ func eOutBack*(x: Progress): float =
   1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2)
 
 func eInOutBack*(x: Progress): float =
-  if  x < 0.5:
+  if x < 0.5:
     (pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
-  else: 
+  else:
     (pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
 
 func eInElastic*(x: Progress): float =
@@ -133,7 +133,7 @@ func eInElastic*(x: Progress): float =
   else:
     -pow(2, 10 * x - 10) * sin((x * 10 - 10.75) * c4)
 
-func eOutElastic*(x: Progress): float=
+func eOutElastic*(x: Progress): float =
   if x == 0:
     0.0
   elif x == 1:
@@ -148,7 +148,7 @@ func eInOutElastic*(x: Progress): float =
     1.0
   elif x < 0.5:
     -(pow(2, 20 * x - 10) * sin((20 * x - 11.125) * c5)) / 2
-  else: 
+  else:
     (pow(2, -20 * x + 10) * sin((20 * x - 11.125) * c5)) / 2 + 1
 
 func eOutBounce*(x: Progress): float =
