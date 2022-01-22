@@ -1,6 +1,6 @@
 import tables
 
-# TODO use `strtabs` instead of `tables
+# TODO use strtabs
 
 type
   ## IR :: Intermediate representation | a bridge between compile time and runtime
@@ -10,7 +10,7 @@ type
     children*: seq[IRNode]
 
   IRParser* = proc(
-    tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+    tag: string, attrs: Table[string, string], children: seq[SVGNode]
   ): SVGNode {.nimcall.}
 
   ParserMap* = Table[string, IRParser] # tag name => parser func
@@ -26,7 +26,7 @@ type
     nodes*: seq[SVGNode]
 
   SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
-    width*, height*: float
+    width*, height*: int
 
   SVGStage* = ref object of RootObj
     canvas*: SVGCanvas
@@ -34,7 +34,7 @@ type
   Progress* = range[0.0 .. 1.0]
   MS* = float
 
-  EasingFn* = proc(timeProgress: Progress): Progress {.nimcall.}
+  EasingFn* = proc(timeProgress: Progress): float {.nimcall.}
   UpdateFn* = proc(animationProgress: Progress) {.closure.}
 
   Transition* = object
@@ -57,11 +57,12 @@ type
   PX* = float
   FPS* = float
 
-# TODO write a macro for that
 func ms*(i: int): MS = i.toFloat
 func ms*(f: float): MS = f
+
 func px*(i: int): PX = i.toFloat
 func px*(f: float): PX = f
+
 func fps*(i: int): FPS = i.toFloat
 func fps*(f: float): FPS = f
 
@@ -69,7 +70,6 @@ func toProgress*(n: float): Progress =
   if n > 1.0: 1.0
   elif n < 0.0: 0.0
   else: n
-
 
 func p*(x, y: int): Point =
   Point(x: x.toFloat, y: y.toFloat)

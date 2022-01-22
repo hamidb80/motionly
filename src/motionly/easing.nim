@@ -3,85 +3,85 @@ import types
 
 ## see real examples here: https://easings.net/
 
-func elinear*(p: Progress): Progress =
+func elinear*(p: Progress): float =
   toProgress p
 
-func eInSine*(p: Progress): Progress =
+func eInSine*(p: Progress): float =
   toProgress 1 - cos((p * PI) / 2)
 
-func eOutSine*(p: Progress): Progress =
+func eOutSine*(p: Progress): float =
   toProgress sin((p * PI) / 2)
 
-func eInOutSine*(p: Progress): Progress =
+func eInOutSine*(p: Progress): float =
   toProgress -(cos(PI * p) - 1) / 2
 
-func eInQuad*(p: Progress): Progress =
+func eInQuad*(p: Progress): float =
   toProgress p * p
 
-func eOutQuad*(p: Progress): Progress =
+func eOutQuad*(p: Progress): float =
   toProgress 1 - (1 - p).pow 2
 
-func eInOutQuad*(p: Progress): Progress =
+func eInOutQuad*(p: Progress): float =
   toProgress:
     if p < 0.5:
       2 * p * p
     else:
       1 - pow(-2 * p + 2, 2) / 2
 
-func eInCubic*(p: Progress): Progress =
+func eInCubic*(p: Progress): float =
   toProgress p.pow 3
 
-func eOutCubic*(p: Progress): Progress =
+func eOutCubic*(p: Progress): float =
   toProgress 1 - pow(1 - p, 3)
 
-func eInOutCubic*(p: Progress): Progress =
+func eInOutCubic*(p: Progress): float =
   toProgress:
     if p < 0.5:
       4 * p.pow 3
     else:
       1 - pow(-2 * p + 2, 3) / 2
 
-func eInQuart*(p: Progress): Progress =
+func eInQuart*(p: Progress): float =
   toProgress p.pow 4
 
-func eOutQuart*(p: Progress): Progress =
+func eOutQuart*(p: Progress): float =
   toProgress 1 - (p-1).pow 4
 
-func eInOutQuart*(p: Progress): Progress =
+func eInOutQuart*(p: Progress): float =
   toProgress:
     if p < 0.5:
       8 * p.pow 4
     else:
       1 - pow(-2 * p + 2, 4) / 2
 
-func eInQuint*(t: Progress): Progress =
+func eInQuint*(t: Progress): float =
   toProgress t.pow 5
 
-func eOutQuint*(p: Progress): Progress =
+func eOutQuint*(p: Progress): float =
   toProgress 1 - pow(1 - p, 5)
 
-func eInOutQuint*(p: Progress): Progress =
+func eInOutQuint*(p: Progress): float =
   toProgress:
     if p < 0.5:
       16 * p.pow(5)
     else:
       1 - pow(-2 * p + 2, 5) / 2
 
-func eInExpo*(p: Progress): Progress =
+func eInExpo*(p: Progress): float =
   toProgress:
     if p == 0:
       0.0
     else:
       pow(2, 10 * p - 10)
 
-func eOutExpo*(p: Progress): Progress =
+func eOutExpo*(p: Progress): float =
   toProgress:
     if p == 1:
       1.0
     else:
       1 - pow(2, -10 * p)
 
-func eInOutExpo*(p: Progress): Progress =
+func eInOutExpo*(p: Progress): float =
   toProgress:
     if p == 0.0:
       0.0
@@ -92,15 +92,17 @@ func eInOutExpo*(p: Progress): Progress =
     else:
       (2 - pow(2, -20 * p + 10)) / 2
 
-func eInCirc*(p: Progress): Progress =
+func eInCirc*(p: Progress): float =
   toProgress 1 - sqrt(1 - pow(p, 2))
 
-func eOutCirc*(p: Progress): Progress =
+func eOutCirc*(p: Progress): float =
   toProgress sqrt(1 - pow(p - 1, 2))
 
-func eInOutCirc*(p: Progress): Progress =
+func eInOutCirc*(p: Progress): float =
   toProgress:
     if p < 0.5:
       (1 - sqrt(1 - pow(2 * p, 2))) / 2
     else:
       (sqrt(1 - pow(-2 * p + 2, 2)) + 1) / 2
+
+# TODO add other stupid esings

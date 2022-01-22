@@ -2,25 +2,21 @@ import std/[tables, strutils]
 import types
 
 type
-  SVGWrapper* = ref object of SVGNode
-    x*, y*: float
+  SVGGroup* = ref object of SVGNode
 
-  SVGGroup* = ref object of SVGWrapper
-
-  SVGShape* = ref object of SVGNode
-
-  SVGRect* = ref object of SVGShape
+  SVGRect* = ref object of SVGNode
     x, y*: float
     width*, height*: float
 
-  SVGCircle* = ref object of SVGShape
+  SVGCircle* = ref object of SVGNode
     cx, cy*: float
     radius*: float
 
-  SVGArc* = ref object of SVGShape
-
+  SVGArc* = ref object of SVGNode
+  SVGPath* = ref object of SVGNode
 
 proc replaceNode*(n: var SVGNode, with: SVGNode) =
+  ## replaces node in the DOM and the container
   for c in n.parent.nodes.mitems:
     if c == n:
       c = with
@@ -34,11 +30,11 @@ proc `<-`*(n: var SVGNode, with: SVGNode) =
   replaceNode(n, with)
 
 func parseRect*(
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+  tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
   var acc = SVGRect(name: tag)
 
-  for (key, val) in attrs:
+  for key, val in attrs:
     case key:
     of "x": acc.x = parseFloat val
     of "y": acc.y = parseFloat val
@@ -50,11 +46,11 @@ func parseRect*(
   acc
 
 func parseCircle*(
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+  tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
   var acc = SVGCircle(name: tag)
 
-  for (key, val) in attrs:
+  for key, val in attrs:
     case key:
     of "cx": acc.cx = parseFloat val
     of "cy": acc.cy = parseFloat val
@@ -65,30 +61,28 @@ func parseCircle*(
   acc
 
 func parseGroup*(
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+  tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
-  var acc = SVGGroup(name: "g")
+  SVGGroup(name: "g", attrs: attrs)
 
-  for (key, val) in attrs:
-    case key:
-    of "x": acc.x = parseFloat val
-    of "y": acc.y = parseFloat val
-    else:
-      acc.attrs[key] = val
-
-  acc
-
+func parseSVGCanvas*(
+  tag: string, attrs: Table[string, string], children: seq[SVGNode]
+): SVGNode =
+  SVGCanvas(name: "svg",
+    width: attrs["width"].parseInt,
+    height: attrs["height"].parseInt,
+    nodes: children
+  )
 
 func parseRaw*[S: SVGNode](
-  tag: string, attrs: seq[(string, string)], children: seq[SVGNode]
+  tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
   var acc = S(name: tag, nodes: children)
 
-  for (key, val) in attrs:
+  for key, val in attrs:
     acc.attrs[key] = val
 
   acc
-
 
 method specialAttrs*(n: SVGNode): Table[string, string] {.base.} = discard
 
@@ -108,22 +102,14 @@ method specialAttrs*(n: SVGRect): Table[string, string] =
 method pos*(n: SVGNode): Point {.base.} =
   raise newException(ValueError, "not implemented")
 
-method pos*(n: SVGWrapper): Point =
-  p(n.x, n.y)
-
 method pos*(n: SVGRect): Point =
   p(n.x, n.y)
 
 method pos*(n: SVGCircle): Point =
   p(n.cx, n.cy)
 
-
 method `pos=`*(n: SVGNode, np: Point) {.base.} =
   raise newException(ValueError, "not implemented")
-
-method `pos=`*(n: SVGWrapper, np: Point) =
-  n.x = np.x
-  n.y = np.y
 
 method `pos=`*(n: SVGRect, np: Point) =
   n.x = np.x

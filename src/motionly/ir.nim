@@ -1,11 +1,22 @@
 import std/[strformat, sequtils, strutils, tables, strtabs, xmlparser, xmltree]
 import types, utils, shapes
 
-proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
-  let nodes = ir.children.mapIt parseIRImpl(it, nil, parserMap)
+let baseParserMap*: ParserMap = toTable {
+  "svg": parseSVGCanvas,
+  "group": parseGroup,
+  "g": parseGroup,
+
+  "rect": parseRect,
+  "circle": parseCircle,
+  "path": parseRaw[SVGGroup],
+  # "arc": parseRaw[SVGArc],
+}
+
+proc parseIR*(ir: IRNode, parent: SVGNode = nil, parserMap: ParserMap = baseParserMap): SVGNode =
+  let nodes = ir.children.mapIt parseIR(it, nil, parserMap)
 
   if ir.tag in parserMap:
-    result = parserMap[ir.tag](ir.tag, ir.attrs, nodes)
+    result = parserMap[ir.tag](ir.tag, ir.attrs.toTable, nodes)
     result.parent = parent
 
     for n in nodes:
@@ -13,28 +24,6 @@ proc parseIRImpl*(ir: IRNode, parent: SVGNode, parserMap: ParserMap): SVGNode =
 
   else:
     raise newException(ValueError, "no such parser for tag name: " & ir.tag)
-
-proc parseIR*(ir: IRNode, parserMap: ParserMap): SVGCanvas =
-  let attrs = toTable ir.attrs
-  assert attrs.containsAll ["width", "height"]
-
-  result = SVGCanvas(
-    name: "svg",
-    width: attrs["width"].parseFloat,
-    height: attrs["height"].parseFloat,
-  )
-  result.nodes = ir.children.mapit parseIRImpl(it, result, parserMap)
-
-let baseParserMap*: ParserMap = toTable {
-  "svg": parseRaw[SVGCanvas],
-  "group": parseGroup,
-  "g": parseGroup,
-
-  "rect": parseRect,
-  "circle": parseCircle,
-  # "arc": parseRaw[SVGArc],
-  # "path": parseRaw[SVGGroup],
-}
 
 method toIR(n: SVGNode): IRNode {.base.} =
   IRNode(
@@ -54,7 +43,7 @@ func toIRImpl(xml: XmlNode, result: var IRNode) =
     toIRImpl(n, acc)
     result.children.add acc
 
-proc toIR*(svgContent: string, ignoreSVGTag = true): IRNode =
+proc toIR*(svgContent: string): IRNode =
   toIRImpl parseXml(svgContent), result
 
 func `$`(ir: IRNode): string =

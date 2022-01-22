@@ -4,7 +4,7 @@ import motionly
 # -------------------------------
 
 type
-  MyComponent = ref object of SVGShape
+  MyComponent = ref object of SVGNode
     s: seq[int]
 
 proc initMyComponent(data: seq[int]): MyComponent =

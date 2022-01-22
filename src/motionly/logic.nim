@@ -69,6 +69,8 @@ proc saveGif*(
 
         for a in newAnimations.mitems:
           a.startTime = currentTime
+          # FIXME animations starttime are set to the time that 
+          # the currentTime arrives, not the actual start time
 
         activeAnimations.add newAnimations
 

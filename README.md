@@ -5,18 +5,19 @@ here, you code animations!
 
 **see these for inspiration:**
 1. http://thesecretlivesofdata.com/raft/
-2. https://github.com/EriKWDev/nanim
-3. https://github.com/bluenote10/NimSvg
-4. https://github.com/jiro4989/svgo
-5. https://www.introbrand.com/
-6. https://www.freecodecamp.org/news/svg-tutorial-learn-to-code-images/
-7. https://www.w3.org/TR/SVG2/conform.html#conformance-overview
-8. https://stackoverflow.com/questions/9853325/how-to-convert-a-svg-to-a-png-with-imagemagick
+2. https://www.introbrand.com/
+
+3. https://github.com/EriKWDev/nanim
+4. https://github.com/bluenote10/NimSvg
+5. https://github.com/jiro4989/svgo
+
+6. https://www.w3.org/TR/SVG2/conform.html#conformance-overview
 
 **useful links**:
 * [svg tutorial](http://tutorials.jenkov.com/svg/index.html)
 * [how to save svg to png](https://imagemagick.org/script/command-line-processing.php)
 * [save to .mp4](https://www.youtube.com/watch?v=thDma0lO0U8)
+* [learn svg path](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths)
 
 example: 
 ```nim

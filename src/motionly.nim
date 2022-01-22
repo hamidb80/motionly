@@ -130,7 +130,7 @@ proc toSVGTree(stageConfig, parserMap, code: NimNode): NimNode =
     )
 
     var `varname` = `cntxWrapper`()
-    `varname`.canvas = `parseIR`(`stageIdent`, `parserMap`)
+    `varname`.canvas = (SVGCanvas)`parseIR`(`stageIdent`, nil, `parserMap`)
     `idGets`
 
   # debugecho "++++++++++++++"
@@ -188,25 +188,23 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
 
       case name:
       of "before":
-        let timeRange = quote: -1.ms .. -1.ms
+        let timeRange = quote: -1.ms .. 0.ms
         add2Timeline(timeRange)
 
       of "flow":
         let
           flowName = entity[1][ObjConstrIdent]
-          args = entity[1][ObjConstrFields].mapIt newTree(nnkExprColonExpr,
-              newIdentDefs(it[0], it[1]))
+          args = entity[1][ObjConstrFields].mapIt newIdentDefs(it[0], it[1])
           sident = ident "stage"
           defs = quote do:
             let `sident` {.used.} = (typeof `stageVar`)(commonStage)
 
-        procDefs.add newProc(
-          flowName,
-          genFormalParams(newEmptyNode(), @[
+          params = genFormalParams(newEmptyNode(), @[
             newIdentDefs("commonStage".ident, "SVGStage".ident),
             newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
-          ] & args).toseq,
-          newStmtList(defs, resolvedBody))
+          ] & args).toseq
+
+        procDefs.add newProc(flowName, params, newStmtList(defs, resolvedBody))
 
       of "on":
         add2Timeline entity[1]
