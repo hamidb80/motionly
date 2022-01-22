@@ -60,6 +60,7 @@ type
   UpdateFn* = proc(animationProgress: Progress) {.closure.}
 
   Transition* = object
+    delay*: MS
     totalTime*: MS
     easingFn*: EasingFn
     updateFn*: UpdateFn

@@ -237,7 +237,13 @@ macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
 func `~>`*(
   u: UpdateFn, props: tuple[len: MS, easing: EasingFn]
 ): Transition =
-  u.applyTransition(props.len, props.easing)
+  u.applyTransition(0, props.len, props.easing)
+
+func `~>`*(
+  u: UpdateFn, props: tuple[len: MS, easing: EasingFn, delay: MS]
+): Transition =
+  u.applyTransition(props.delay, props.len, props.easing)
+
 
 template register*(t: Transition): untyped {.dirty.} =
   cntx.add t.toAnimation()

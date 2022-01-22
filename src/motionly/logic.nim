@@ -1,4 +1,4 @@
-import std/[os, osproc, strformat, tables, algorithm, math]
+import std/[os, osproc, strformat, tables, algorithm, math, sequtils]
 import types, ir
 
 func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
@@ -29,8 +29,8 @@ func len*(rng: HSlice[float, float]): float =
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
 
-func applyTransition*(u: UpdateFn, len: MS, e: EasingFn): Transition =
-  Transition(totalTime: len, easingFn: e, updateFn: u)
+func applyTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
+  Transition(delay: delay, totalTime: len, easingFn: e, updateFn: u)
 
 func genFrameFileName(fname: string, index: int): string =
   fmt"{fname}_{index:08}.svg"
@@ -51,15 +51,16 @@ proc saveGif*(
   var
     currentTime = 0.0
     activeAnimations: Recording
+    animationQueue: Recording
     tli = 0
     savedCount = 0
 
   block loop:
     while (
-        keepUseless or tli <= tl.high or activeAnimations.len != 0
+        keepUseless or tli <= tl.high or 
+        activeAnimations.len + animationQueue.len != 0
       ) and currentTime <= preview.b:
-      
-      # TODO add queue
+
       block collectNewAnimations:
         var newAnimations: Recording
 
@@ -70,14 +71,27 @@ proc saveGif*(
           else: break
 
         for a in newAnimations.mitems:
-          a.startTime = currentTime
-          # FIXME animations starttime are set to the time that 
+          if a.t.delay == 0:
+            activeAnimations.add a
+            a.startTime = currentTime
+          else:
+            a.startTime = currentTime + a.t.delay
+            animationQueue.add a
+
+          # FIXME animations starttime are set to the time that
           # the currentTime arrives, not the actual start time
 
-        activeAnimations.add newAnimations
 
       block applyAndFilterAnimations:
         var anims: Recording
+
+        animationQueue.keepItIf:
+          if currentTime >= it.startTime:
+            activeAnimations.add it
+            false
+          else: 
+            true
+
         for a in activeAnimations:
           let timeProgress = toProgress:
             (currentTime - a.startTime) / a.t.totalTime
