@@ -231,9 +231,9 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     var `timelineVar`: `TimeLine` = resolveTimeline @`tb`
     `timelineVar`.sort ## sort before usage
 
-  debugEcho "=============="
-  debugEcho repr result
-  debugEcho "////////////////"
+  # debugEcho "=============="
+  # debugEcho repr result
+  # debugEcho "////////////////"
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)

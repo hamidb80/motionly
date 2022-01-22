@@ -35,7 +35,7 @@ func genFrameFileName(fname: string, index: int): string =
 func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
   var lastTime = 0.ms
   for kf in kfs:
-    let newTime = 
+    let startTime = 
       if kf.isDependent:
         lastTime = kf.timeRange.b + lasttime
         lastTime
@@ -43,7 +43,7 @@ func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
         lastTime = kf.timeRange.b
         kf.timeRange.a
 
-    result.add (newTime, kf.fn)
+    result.add (startTime, kf.fn)
 
 proc saveGif*(
   tl: TimeLine, outputPath: string,
