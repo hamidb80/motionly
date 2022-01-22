@@ -32,6 +32,19 @@ func genTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
 func genFrameFileName(fname: string, index: int): string =
   fmt"{fname}_{index:08}.svg"
 
+func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
+  var lastTime = 0.ms
+  for kf in kfs:
+    let newTime = 
+      if kf.isDependent:
+        lastTime = kf.timeRange.b + lasttime
+        lastTime
+      else:
+        lastTime = kf.timeRange.b
+        kf.timeRange.a
+
+    result.add (newTime, kf.fn)
+
 proc saveGif*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, scale = 1.0,

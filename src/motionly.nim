@@ -153,13 +153,14 @@ func replaceStageComponents*(body: NimNode): NimNode =
     else:
       result[i] = replaceStageComponents(n)
 
+# TODO: flows can have return type
 func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
   var
-    timelineIR: seq[tuple[timeRange, fn: NimNode]]
+    timelineIR: seq[tuple[timeRange, isDependent, fn: NimNode]]
     procDefs = newStmtList()
 
   for i, entity in body:
-    template add2Timeline(timeRange): untyped {.dirty.} =
+    template add2Timeline(timeRange: untyped, isDependent: bool): untyped {.dirty.} =
       assert entity.len in [2, 3]
       let
         stgName = ident fmt"timeRange_{i}"
@@ -180,7 +181,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         ]).toseq,
         newStmtList(defs, resolvedBody))
 
-      timelineIR.add (timeRange[InfixLeftSide], stgName)
+      timelineIR.add (timeRange, ident($isDependent), stgName)
 
     case entity.kind:
     of nnkCommand, nnkCall:
@@ -190,8 +191,8 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
 
       case name:
       of "before":
-        let timeRange = quote: -1.ms .. 0.ms
-        add2Timeline(timeRange)
+        let timeRange = quote: 0.ms .. 0.ms
+        add2Timeline timeRange, false
 
       of "flow":
         let
@@ -209,10 +210,13 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         procDefs.add newProc(flowName, params, newStmtList(defs, resolvedBody))
 
       of "on":
-        add2Timeline entity[1]
+        add2Timeline entity[1], false
 
       of "at":
-        add2Timeline infix(entity[1], "..", entity[1])
+        add2Timeline infix(entity[1], "..", entity[1]), false
+
+      of "after":
+        add2Timeline infix(entity[1], "..", entity[1]), true
 
       else:
         error "invalid entity name: " & name
@@ -220,16 +224,16 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     else:
       error "not valid entity kind: " & $entity.kind
 
-  let tb = toBrackets timelineIR.mapIt toTupleNode(it[0], it[1])
+  let tb = toBrackets timelineIR.mapIt toTupleNode(it[0], it[1], it[2])
 
   result = quote:
     `procDefs`
-    var `timelineVar`: `TimeLine` = @`tb`
+    var `timelineVar`: `TimeLine` = resolveTimeline @`tb`
     `timelineVar`.sort ## sort before usage
 
-  # debugEcho "=============="
-  # debugEcho repr result
-  # debugEcho "////////////////"
+  debugEcho "=============="
+  debugEcho repr result
+  debugEcho "////////////////"
 
 macro defTimeline*(timelineVar: untyped, stageVar: typed, body): untyped =
   defTimelineImpl(timelineVar, stageVar, body)

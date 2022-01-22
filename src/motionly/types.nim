@@ -72,6 +72,11 @@ type
 
   Recording* = seq[Animation]
 
+  KeyFrameIR* = tuple
+    timeRange: HSlice[MS, MS]
+    isDependent: bool # whether is dependent on prevous keyframe or not
+    fn: proc(commonStage: SVGStage, cntx: var Recording) {.nimcall.}
+
   KeyFrame* = tuple
     startTime: MS
     fn: proc(commonStage: SVGStage, cntx: var Recording) {.nimcall.}

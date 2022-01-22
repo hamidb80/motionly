@@ -29,6 +29,8 @@ proc replaceNode*(n: var SVGNode, with: SVGNode) =
 proc `<-`*(n: var SVGNode, with: SVGNode) =
   replaceNode(n, with)
 
+# TODO parse "styles" too
+
 func parseRect*(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
