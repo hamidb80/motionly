@@ -165,10 +165,12 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         stgName = ident fmt"timeRange_{i}"
         sident = ident "stage"
         dti = ident "dt"
+        timeRangei = ident "timeRange"
         defs = quote do:
           let
             `sident` {.used.} = (typeof `stageVar`)(commonStage)
             `dti` {.used.} = len(`timeRange`)
+            `timeRangei` {.used.} = `timeRange`
 
       procDefs.add newProc(
         stgName,
