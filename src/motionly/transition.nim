@@ -1,16 +1,16 @@
 import types, shapes
 
-proc tmove*(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
+proc tmove*(s: SVGNode, states: HSlice[Point, Point]): UpdateFn =
   let v = states.b - states.a
 
   proc updater(ap: float, tp: Progress) =
-    st.pos = states.a + (v * ap)
+    s.pos = states.a + (v * ap)
 
   updater
 
-proc tmove*(st: SVGNode, vec: Point): UpdateFn =
+proc tmove*(s: SVGNode, vec: Point): UpdateFn =
   let t = translate(0, 0)
-  st.transforms.add t
+  s.transforms.add t
 
   proc updater(ap: float, tp: Progress) =
     let pv = vec * ap
@@ -19,16 +19,16 @@ proc tmove*(st: SVGNode, vec: Point): UpdateFn =
 
   updater
 
-proc topacity*(st: SVGNode, states: HSlice[float, float]): UpdateFn =
+proc topacity*(s: SVGNode, states: HSlice[float, float]): UpdateFn =
   let d = states.len
 
   proc updater(ap: float, tp: Progress) =
-    st.opacity = states.a + d * ap
+    s.opacity = states.a + d * ap
 
   updater
 
-proc fadeOut*(st: SVGNode): UpdateFn =
-  topacity(st, 1.0 .. 0.0)
+proc fadeOut*(s: SVGNode): UpdateFn =
+  topacity(s, 1.0 .. 0.0)
 
-proc fadeIn*(st: SVGNode): UpdateFn =
-  topacity(st, 0.0 .. 1.0)
+proc fadeIn*(s: SVGNode): UpdateFn =
+  topacity(s, 0.0 .. 1.0)

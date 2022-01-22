@@ -2,6 +2,14 @@ import math
 import types
 
 ## see real examples here: https://easings.net/
+const
+  c1 = 1.70158
+  c2 = c1 * 1.525
+  c3 = c1 + 1
+  c4 = (2 * PI) / 3
+  c5 = (2 * PI) / 4.5
+  n1 = 7.5625
+  d1 = 2.75
 
 func elinear*(p: Progress): float =
   toProgress p
@@ -105,4 +113,59 @@ func eInOutCirc*(p: Progress): float =
     else:
       (sqrt(1 - pow(-2 * p + 2, 2)) + 1) / 2
 
-# TODO add other stupid esings
+func eInBack*(x: Progress): float =
+  c3 * x.pow(3) - c1 * x.pow(2)
+
+func eOutBack*(x: Progress): float =
+  1 + c3 * pow(x - 1, 3) + c1 * pow(x - 1, 2)
+
+func eInOutBack*(x: Progress): float =
+  if  x < 0.5:
+    (pow(2 * x, 2) * ((c2 + 1) * 2 * x - c2)) / 2
+  else: 
+    (pow(2 * x - 2, 2) * ((c2 + 1) * (x * 2 - 2) + c2) + 2) / 2
+
+func eInElastic*(x: Progress): float =
+  if x == 0:
+    0.0
+  elif x == 1:
+    1.0
+  else:
+    -pow(2, 10 * x - 10) * sin((x * 10 - 10.75) * c4)
+
+func eOutElastic*(x: Progress): float=
+  if x == 0:
+    0.0
+  elif x == 1:
+    1.0
+  else:
+    pow(2, -10 * x) * sin((x * 10 - 0.75) * c4) + 1
+
+func eInOutElastic*(x: Progress): float =
+  if x == 0:
+    0.0
+  elif x == 1:
+    1.0
+  elif x < 0.5:
+    -(pow(2, 20 * x - 10) * sin((20 * x - 11.125) * c5)) / 2
+  else: 
+    (pow(2, -20 * x + 10) * sin((20 * x - 11.125) * c5)) / 2 + 1
+
+func eOutBounce*(x: Progress): float =
+  if x < 1 / d1:
+    n1 * x.pow(2)
+  elif x < 2 / d1:
+    n1 * (x - 1.5) / d1 * (x - 1.5) + 0.75
+  elif x < 2.5 / d1:
+    n1 * (x - 2.25) / d1 * (x - 2.25) + 0.9375
+  else:
+    n1 * (x - 2.625) / d1 * (x - 2.625) + 0.984375
+
+func eInBounce*(x: Progress): float =
+  1 - eOutBounce(1 - x)
+
+func eInOutBounce*(x: Progress): float =
+  if x < 0.5:
+    (1 - eOutBounce(1 - 2 * x)) / 2
+  else:
+    (1 + eOutBounce(2 * x - 1)) / 2
