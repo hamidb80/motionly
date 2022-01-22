@@ -81,6 +81,8 @@ type
   PX* = float
   FPS* = float
 
+func len*(rng: HSlice[float, float]): float =
+  rng.b - rng.a
 
 func ms*(i: int): MS = i.toFloat
 func ms*(f: float): MS = f
@@ -90,7 +92,6 @@ func px*(f: float): PX = f
 
 func fps*(i: int): FPS = i.toFloat
 func fps*(f: float): FPS = f
-
 
 func toProgress*(n: float): Progress =
   if n > 1.0: 1.0

@@ -52,15 +52,13 @@ defStage mystage(width = 185, height = 260), pm:
 defTimeline timeline, mystage:
   flow hideStack(i: int, dt: float):
     register @layers[i].tmove(p(0, -30)) ~> (dt, eOutQuad)
-    # register @layers[i].hide() ~> (dt, eOutQuad)
+    register @layers[i].fadeOut() ~> (dt, eOutQuad)
 
   on 100.ms .. 500.ms:
-    # !hideStack(1, dt)
-    # !hideStack(2, dt)
-    discard
+    !hideStack(0, dt)
 
-  on 400.ms .. 1000.ms:
-    !hideStack(3, dt)
+  on 400.ms .. 800.ms:
+    !hideStack(1, dt)
 
   at 1200.ms:
     discard

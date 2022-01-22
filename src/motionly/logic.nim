@@ -23,9 +23,6 @@ func sort*(tl: var TimeLine) =
 func toMagickFrameDelay(ms: MS): int =
   (ms / 10).ceil.toint.max(2)
 
-func len*(rng: HSlice[float, float]): float =
-  rng.b - rng.a
-
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
 
