@@ -37,8 +37,9 @@ func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
   for kf in kfs:
     let startTime = 
       if kf.isDependent:
-        lastTime = kf.timeRange.b + lasttime
-        lastTime
+        let res = kf.timeRange.a + lasttime
+        lastTime = kf.timeRange.b + lastTime
+        res
       else:
         lastTime = kf.timeRange.b
         kf.timeRange.a

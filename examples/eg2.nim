@@ -10,7 +10,10 @@ defTimeline timeline, mystage:
   on 400.ms .. 800.ms:
     register @box.tmove(p(100, 100) .. p(0, 100)) ~> (dt, eOutCubic)
 
-  after 0.ms:
-    register @box.tmove(p(100, 0)) ~> (500.ms, eOutCubic)
+  frame 500.ms:
+    register @box.tmove(p(100, 0)) ~> (dt, eOutCubic)
+
+  frame 100.ms:
+    register @box.tmove(p(100, 0)) ~> (300.ms, eOutCubic)
 
 timeline.saveGif("./temp/out.gif", mystage, 50.fps)

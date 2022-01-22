@@ -160,7 +160,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     procDefs = newStmtList()
 
   for i, entity in body:
-    template add2Timeline(timeRange: untyped, isDependent: bool): untyped {.dirty.} =
+    template add2Timeline(timeRange: untyped, isDependent: bool = false): untyped {.dirty.} =
       assert entity.len in [2, 3]
       let
         stgName = ident fmt"timeRange_{i}"
@@ -192,7 +192,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
       case name:
       of "before":
         let timeRange = quote: 0.ms .. 0.ms
-        add2Timeline timeRange, false
+        add2Timeline timeRange
 
       of "flow":
         let
@@ -210,13 +210,16 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
         procDefs.add newProc(flowName, params, newStmtList(defs, resolvedBody))
 
       of "on":
-        add2Timeline entity[1], false
+        add2Timeline entity[1]
 
       of "at":
-        add2Timeline infix(entity[1], "..", entity[1]), false
+        add2Timeline infix(entity[1], "..", entity[1])
 
       of "after":
         add2Timeline infix(entity[1], "..", entity[1]), true
+
+      of "frame":
+        add2Timeline infix(newFloatLitNode(0), "..", entity[1]), true
 
       else:
         error "invalid entity name: " & name
