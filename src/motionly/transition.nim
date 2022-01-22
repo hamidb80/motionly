@@ -1,4 +1,3 @@
-import std/[tables]
 import types, shapes
 
 proc move*(st: SVGNode, states: HSlice[Point, Point]): UpdateFn =
@@ -24,7 +23,7 @@ proc topacity*(st: SVGNode, states: HSlice[float, float]): UpdateFn =
   let d = states.len
 
   proc updater(ap: float, tp: Progress) =
-    st.attrs["opacity"] = $(states.a + d * ap)
+    st.opacity = states.a + d * ap
 
   updater
 

@@ -118,3 +118,9 @@ method `pos=`*(n: SVGRect, np: Point) =
 method `pos=`*(n: SVGCircle, np: Point) =
   n.cx = np.x
   n.cy = np.y
+
+method opacity*(n: SVGNode): float {.base.} =
+  n.styles.getOrDefault("opacity", "1").parseFloat
+
+method `opacity=`*(n: SVGNode, o: Progress) {.base.} =
+  n.styles["opacity"] = $o

@@ -14,9 +14,6 @@ const
 
 # --------------------------------------------
 
-# method specialAttrs(n: StackLayer): Table[string, string] =
-#   discard
-
 proc stackLayerParser(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
@@ -50,9 +47,12 @@ defStage mystage(width = 185, height = 260), pm:
   stackLayer(y = 150, fill = blue) as @layers[]
 
 defTimeline timeline, mystage:
+  flow moveUp(i: int, dt: float):
+    register @layers[i].tmove(p(0, -30)) ~> (dt, eOutCubic)
+
   flow hideStack(i: int, dt: float):
-    register @layers[i].tmove(p(0, -30)) ~> (dt, eOutQuad)
-    register @layers[i].fadeOut() ~> (dt, eOutQuad)
+    register @layers[i].fadeOut() ~> (dt, eInOutQuad)
+    !moveUp(i, dt)
 
   on 100.ms .. 500.ms:
     !hideStack(0, dt)

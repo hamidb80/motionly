@@ -47,6 +47,8 @@ func toIR(n: SVGNode): IRNode =
 
   if n.transforms.len != 0:
     otherAttrs["transform"] = n.transforms.join(" ")
+  if n.styles.len != 0: 
+    otherAttrs["style"] = n.styles.pairs.toseq.mapIt(fmt"{it[0]}: {it[1]}").join "; "
 
   IRNode(
     tag: n.name,
