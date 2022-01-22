@@ -77,7 +77,7 @@ proc saveGif*(
 
         while tli <= tl.high:
           if currentTime >= tl[tli].startTime:
-            tl[tli].fn(stage, newAnimations)
+            tl[tli].fn(stage, newAnimations, currentTime)
             tli.inc
           else: break
 

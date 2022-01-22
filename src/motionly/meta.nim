@@ -29,12 +29,6 @@ func newObjectType*(
   typedef[0] = objName
   result = newTree(nnkTypeSection, typeDef.add(objectDef))
 
-func castSafety*(code: NimNode): NimNode=
-  quote:
-    {.cast(noSideEffect).}:
-      {.cast(gcsafe).}:
-        `code`
-
 proc insertMulti*(main: NimNode, index: int, nodes: varargs[NimNode])=
   for i in countdown(nodes.high, 0):
     main.insert(index, nodes[i])

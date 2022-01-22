@@ -153,31 +153,31 @@ func replaceStageComponents*(body: NimNode): NimNode =
     else:
       result[i] = replaceStageComponents(n)
 
-# TODO: flows can have return type
 func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
   var
     timelineIR: seq[tuple[timeRange, isDependent, fn: NimNode]]
     procDefs = newStmtList()
 
   for i, entity in body:
-    template add2Timeline(timeRange: untyped, isDependent: bool = false): untyped {.dirty.} =
+    template add2Timeline(
+      timeRange: untyped, isDependent: bool = false
+    ): untyped {.dirty.} =
       assert entity.len in [2, 3]
       let
         stgName = ident fmt"timeRange_{i}"
         sident = ident "stage"
         dti = ident "dt"
-        timeRangei = ident "timeRange"
         defs = quote do:
           let
             `sident` {.used.} = (typeof `stageVar`)(commonStage)
             `dti` {.used.} = len(`timeRange`)
-            `timeRangei` {.used.} = `timeRange`
 
       procDefs.add newProc(
         stgName,
         genFormalParams(newEmptyNode(), [
           newIdentDefs("commonStage".ident, "SVGStage".ident),
-          newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident))
+          newIdentDefs("cntx".ident, newTree(nnkVarTy, "Recording".ident)),
+          newIdentDefs("currentTime".ident, "float".ident),
         ]).toseq,
         newStmtList(defs, resolvedBody))
 
@@ -187,7 +187,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     of nnkCommand, nnkCall:
       let
         name = entity[CommandIdent].strVal
-        resolvedBody = castSafety replaceStageComponents(entity[CommandBody])
+        resolvedBody = replaceStageComponents(entity[CommandBody])
 
       case name:
       of "before":
