@@ -12,7 +12,10 @@ let baseParserMap*: ParserMap = toTable {
   # "arc": parseRaw[SVGArc],
 }
 
-proc parseIR*(ir: IRNode, parent: SVGNode = nil, parserMap: ParserMap = baseParserMap): SVGNode =
+proc parseIR*(
+  ir: IRNode, parent: SVGNode = nil,
+  parserMap: ParserMap = baseParserMap
+): SVGNode =
   let nodes = ir.children.mapIt parseIR(it, nil, parserMap)
 
   if ir.tag in parserMap:
@@ -24,13 +27,6 @@ proc parseIR*(ir: IRNode, parent: SVGNode = nil, parserMap: ParserMap = basePars
 
   else:
     raise newException(ValueError, "no such parser for tag name: " & ir.tag)
-
-method toIR(n: SVGNode): IRNode {.base.} =
-  IRNode(
-    tag: n.name,
-    attrs: merge(specialAttrs(n), n.attrs).pairs.toseq,
-    children: n.nodes.map toIR
-  )
 
 func toIRImpl(xml: XmlNode, result: var IRNode) =
   result.tag = xml.tag
@@ -45,6 +41,18 @@ func toIRImpl(xml: XmlNode, result: var IRNode) =
 
 proc toIR*(svgContent: string): IRNode =
   toIRImpl parseXml(svgContent), result
+
+func toIR(n: SVGNode): IRNode =
+  var otherAttrs: Table[string, string]
+
+  if n.transforms.len != 0:
+    otherAttrs["transform"] = n.transforms.join(" ")
+
+  IRNode(
+    tag: n.name,
+    attrs: merge(specialAttrs(n), otherAttrs, n.attrs).pairs.toseq,
+    children: n.nodes.map toIR
+  )
 
 func `$`(ir: IRNode): string =
   let ats = ir.attrs.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "

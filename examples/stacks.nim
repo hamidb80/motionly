@@ -14,8 +14,8 @@ const
 
 # --------------------------------------------
 
-method specialAttrs(n: StackLayer): Table[string, string] =
-  discard
+# method specialAttrs(n: StackLayer): Table[string, string] =
+#   discard
 
 proc stackLayerParser(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
@@ -25,28 +25,33 @@ proc stackLayerParser(
   for n in stack.nodes.mitems:
     n.attrs["fill"] = attrs["fill"]
 
-  StackLayer(
+  let shape = StackLayer(
     name: "g", nodes: stack.nodes,
     half: stack.nodes[0],
     full: stack.nodes[1],
+    transforms: @[translateY(attrs["y"].parseFloat)],
     attrs: {"id": attrs["id"]}.totable
   )
+
+  if not attrs.getOrDefault("visible", "false").parseBool:
+    shape.full.attrs["opacity"] = $0    
+
+  shape
 
 var pm = baseParserMap
 pm["stackLayer"] = stackLayerParser
 
 # --------------------------------------
 
-defStage mystage(width = 185, height = 500), pm:
-  stackLayer(y = 00, fill = dark) as @layers[]
-  stackLayer(y = 30, fill = blue) as @layers[]
-  stackLayer(y = 60, fill = dark) as @layers[]
-  stackLayer(y = 90, fill = blue) as @layers[]
+defStage mystage(width = 185, height = 260), pm:
+  stackLayer(y = 0, fill = dark, visible= true) as @layers[]
+  stackLayer(y = 50, fill = blue) as @layers[]
+  stackLayer(y = 100, fill = dark) as @layers[]
+  stackLayer(y = 150, fill = blue) as @layers[]
 
 defTimeline timeline, mystage:
   flow hideStack(i: int, dt: float):
     discard
-    # let currentp = @layers[i].pos
     # register @layers[i].tmove(p(0, -30)) ~> (dt, eOutQuad)
     # register @layers[i].hide() ~> (dt, eOutQuad)
 
@@ -54,7 +59,7 @@ defTimeline timeline, mystage:
     !hideStack(2, dt)
 
   on 600.ms .. 1000.ms:
-    !hideStack(2, dt)
+    !hideStack(3, dt)
 
 
-timeline.saveGif("./temp/out.gif", mystage, 50.fps)
+timeline.saveGif("./temp/out.gif", mystage, 50.fps, justFirstFrame = false)

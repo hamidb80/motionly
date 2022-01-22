@@ -58,6 +58,8 @@ proc saveGif*(
     while (
         keepUseless or tli <= tl.high or activeAnimations.len != 0
       ) and currentTime <= preview.b:
+      
+      # TODO add queue
       block collectNewAnimations:
         var newAnimations: Recording
 

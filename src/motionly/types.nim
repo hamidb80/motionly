@@ -1,4 +1,4 @@
-import tables
+import std/[tables, options, strformat, strutils]
 
 # TODO use strtabs
 
@@ -19,11 +19,33 @@ type
   Point* = object
     x*, y*: float
 
+  TransformFns = enum
+    tfTranslate, tfRotate, tfScale, tfSkew, tfMatrix
+
+  Transform* = ref object
+    case kind: TransformFns
+    of tfTranslate:
+      tx*, ty*: float
+
+    of tfRotate:
+      deg*: float
+      center*: Option[Point]
+
+    of tfScale:
+      sx*, sy*: float
+
+    of tfSkew:
+      kx*, ky*: float
+
+    of tfMatrix:
+      args*: array[6, float]
+
   SVGNode* = ref object of RootObj
     name*: string
     attrs*, styles*: Table[string, string]
     parent*: SVGNode
     nodes*: seq[SVGNode]
+    transforms*: seq[Transform]
 
   SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
     width*, height*: int
@@ -57,6 +79,7 @@ type
   PX* = float
   FPS* = float
 
+
 func ms*(i: int): MS = i.toFloat
 func ms*(f: float): MS = f
 
@@ -66,10 +89,12 @@ func px*(f: float): PX = f
 func fps*(i: int): FPS = i.toFloat
 func fps*(f: float): FPS = f
 
+
 func toProgress*(n: float): Progress =
   if n > 1.0: 1.0
   elif n < 0.0: 0.0
   else: n
+
 
 func p*(x, y: int): Point =
   Point(x: x.toFloat, y: y.toFloat)
@@ -88,3 +113,52 @@ func `-`*(p1, p2: Point): Point =
 
 func `*`*(p: Point, n: float): Point =
   Point(x: p.x * n, y: p.y * n)
+
+
+func rotation*(r: float): Transform =
+  Transform(kind: tfRotate, deg: r)
+
+func rotation*(r: float, center: Point): Transform =
+  Transform(kind: tfRotate, deg: r, center: some center)
+
+func scale*(s: float): Transform =
+  Transform(kind: tfScale, sx: s, sy: s)
+
+func scale*(sx, sy: float): Transform =
+  Transform(kind: tfScale, sx: sx, sy: sy)
+
+func translate*(tx, ty: float): Transform =
+  Transform(kind: tfTranslate, tx: tx, ty: ty)
+
+func translateX*(tx: float): Transform =
+  translate(tx, 0)
+
+func translateY*(ty: float): Transform =
+  translate(0, ty)
+
+func skewX*(deg: float): Transform =
+  Transform(kind: tfSkew, kx: deg)
+
+func skewY*(deg: float): Transform =
+  Transform(kind: tfSkew, ky: deg)
+
+func tmatrix*(a, b, c, d, e, f: float): Transform =
+  Transform(kind: tfMatrix, args: [a, b, c, d, e, f])
+
+func `$`*(tr: Transform): string =
+  case tr.kind:
+  of tfTranslate: fmt"translate({tr.tx}, {tr.ty})"
+
+  of tfRotate:
+    if isSome tr.center:
+      fmt"rotate({tr.deg})"
+    else:
+      fmt"rotate({tr.deg}, {tr.center.get.x}, {tr.center.get.y})"
+
+  of tfScale: fmt"scale({tr.sx}, {tr.sy})"
+
+  of tfSkew:
+    if tr.kx != 0: fmt"skewX({tr.kx})"
+    else: fmt"skewY({tr.ky})"
+
+  of tfMatrix: "matrix(" & tr.args.join(",") & ")"
