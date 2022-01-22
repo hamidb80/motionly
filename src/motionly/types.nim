@@ -57,7 +57,8 @@ type
   MS* = float
 
   EasingFn* = proc(timeProgress: Progress): float {.nimcall.}
-  UpdateFn* = proc(animationProgress: Progress) {.closure.}
+  # in some easing functions, the animation progress violates the Progress range
+  UpdateFn* = proc(animationProgress: float, timeProgress: Progress) {.closure.}  
 
   Transition* = object
     delay*: MS
@@ -95,6 +96,9 @@ func toProgress*(n: float): Progress =
   if n > 1.0: 1.0
   elif n < 0.0: 0.0
   else: n
+
+func ended*(p: Progress): bool =
+  p == Progress.high
 
 
 func p*(x, y: int): Point =

@@ -29,7 +29,7 @@ func len*(rng: HSlice[float, float]): float =
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
 
-func applyTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
+func genTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
   Transition(delay: delay, totalTime: len, easingFn: e, updateFn: u)
 
 func genFrameFileName(fname: string, index: int): string =
@@ -57,7 +57,7 @@ proc saveGif*(
 
   block loop:
     while (
-        keepUseless or tli <= tl.high or 
+        keepUseless or tli <= tl.high or
         activeAnimations.len + animationQueue.len != 0
       ) and currentTime <= preview.b:
 
@@ -71,37 +71,25 @@ proc saveGif*(
           else: break
 
         for a in newAnimations.mitems:
-          if a.t.delay == 0:
-            activeAnimations.add a
-            a.startTime = currentTime
-          else:
-            a.startTime = currentTime + a.t.delay
-            animationQueue.add a
-
+          a.startTime = currentTime + a.t.delay
+          animationQueue.add a
           # FIXME animations starttime are set to the time that
           # the currentTime arrives, not the actual start time
 
-
       block applyAndFilterAnimations:
-        var anims: Recording
-
         animationQueue.keepItIf:
           if currentTime >= it.startTime:
             activeAnimations.add it
             false
-          else: 
+          else:
             true
 
-        for a in activeAnimations:
+        activeAnimations.keepItIf:
           let timeProgress = toProgress:
-            (currentTime - a.startTime) / a.t.totalTime
+            (currentTime - it.startTime) / it.t.totalTime
 
-          a.t.updateFn(a.t.easingFn(timeProgress))
-
-          if timeProgress != Progress.high:
-            anims.add a
-
-        activeAnimations = anims
+          it.t.updateFn(it.t.easingFn(timeProgress), timeProgress)
+          not timeProgress.ended
 
       block takeSnapShot:
         if currentTime in preview:
