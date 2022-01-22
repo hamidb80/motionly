@@ -10,6 +10,8 @@ defTimeline timeline, mystage:
   on 400.ms .. 800.ms:
     register @box.tmove(p(100, 100) .. p(0, 100)) ~> (dt, eOutCubic)
 
+  after 300.ms: discard # waste some time
+
   frame 500.ms:
     register @box.tmove(p(100, 0)) ~> (dt, eOutCubic)
 
