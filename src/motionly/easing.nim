@@ -11,7 +11,7 @@ const
   n1 = 7.5625
   d1 = 2.75
 
-func elinear*(p: Progress): float =
+func eLinear*(p: Progress): float =
   toProgress p
 
 func eInSine*(p: Progress): float =

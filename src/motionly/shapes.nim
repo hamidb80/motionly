@@ -65,7 +65,7 @@ func parseCircle*(
 func parseGroup*(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
-  SVGGroup(name: "g", attrs: attrs)
+  SVGGroup(name: "g", attrs: attrs, nodes: children)
 
 func parseSVGCanvas*(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]

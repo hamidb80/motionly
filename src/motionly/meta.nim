@@ -32,3 +32,9 @@ func newObjectType*(
 proc insertMulti*(main: NimNode, index: int, nodes: varargs[NimNode])=
   for i in countdown(nodes.high, 0):
     main.insert(index, nodes[i])
+
+func castSafety*(code: NimNode): NimNode=
+  quote:
+    {.cast(noSideEffect).}:
+      {.cast(gcsafe).}:
+        `code`

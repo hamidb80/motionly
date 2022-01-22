@@ -187,7 +187,7 @@ func defTimelineImpl(timelineVar, stageVar, body: NimNode): NimNode =
     of nnkCommand, nnkCall:
       let
         name = entity[CommandIdent].strVal
-        resolvedBody = replaceStageComponents(entity[CommandBody])
+        resolvedBody = castSafety replaceStageComponents(entity[CommandBody])
 
       case name:
       of "before":

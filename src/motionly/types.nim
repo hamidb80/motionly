@@ -58,7 +58,7 @@ type
 
   EasingFn* = proc(timeProgress: Progress): float {.nimcall.}
   # in some easing functions, the animation progress violates the Progress range
-  UpdateFn* = proc(animationProgress: float, timeProgress: Progress) {.closure.}  
+  UpdateFn* = proc(animationProgress: float, timeProgress: Progress) {.closure.}
 
   Transition* = object
     delay*: MS
@@ -72,7 +72,8 @@ type
 
   Recording* = seq[Animation]
 
-  ActionFn* = proc(commonStage: SVGStage, cntx: var Recording, currentTime: MS) {.nimcall.} 
+  ActionFn* = proc(commonStage: SVGStage, cntx: var Recording,
+      currentTime: MS) {.nimcall.}
 
   KeyFrameIR* = tuple
     timeRange: HSlice[MS, MS]
@@ -127,6 +128,8 @@ func `-`*(p1, p2: Point): Point =
 func `*`*(p: Point, n: float): Point =
   Point(x: p.x * n, y: p.y * n)
 
+func `/`*(p: Point, n: float): Point =
+  p * (1/n)
 
 func rotation*(r: float): Transform =
   Transform(kind: tfRotate, deg: r)
@@ -164,9 +167,9 @@ func `$`*(tr: Transform): string =
 
   of tfRotate:
     if isSome tr.center:
-      fmt"rotate({tr.deg})"
-    else:
       fmt"rotate({tr.deg}, {tr.center.get.x}, {tr.center.get.y})"
+    else:
+      fmt"rotate({tr.deg})"
 
   of tfScale: fmt"scale({tr.sx}, {tr.sy})"
 

@@ -20,22 +20,16 @@ func cmp*(k1, k2: KeyFrame): int =
 func sort*(tl: var TimeLine) =
   tl.sort cmp
 
-func toMagickFrameDelay(ms: MS): int =
-  (ms / 10).ceil.toint.max(2)
-
 func toAnimation*(t: Transition): Animation =
   Animation(t: t)
 
 func genTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
   Transition(delay: delay, totalTime: len, easingFn: e, updateFn: u)
 
-func genFrameFileName(fname: string, index: int): string =
-  fmt"{fname}_{index:08}.svg"
-
 func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
   var lastTime = 0.ms
   for kf in kfs:
-    let startTime = 
+    let startTime =
       if kf.isDependent:
         let res = kf.timeRange.a + lasttime
         lastTime = kf.timeRange.b + lastTime
@@ -46,18 +40,21 @@ func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
 
     result.add (startTime, kf.fn)
 
-proc saveGif*(
-  tl: TimeLine, outputPath: string,
-  stage: SVGStage, frameRate: FPS, scale = 1.0,
-  preview = 0.ms .. 10_000.ms, justFirstFrame = false,
-  keepUseless = false, repeat = 1,
-) =
-  ## note: the best fps for magick is 50.fps
-  assert isSorted tl
+func toMagickFrameDelay(ms: MS): int =
+  (ms / 10).floor.toint.max(2)
 
-  let
-    (dir, fname, _) = splitFile(outputPath)
-    frameDuration = 1000 / frameRate
+func genFrameFileName(fname: string, index: int): string =
+  fmt"{fname}_{index:06}.svg"
+
+# TODO clean svg files unless you're in debug mode
+# TODO use web browser preview in debug mode
+proc save(
+  tl: TimeLine, stage: SVGStage,
+  frameDuration: float, preview: HSlice[MS, MS],
+  justFirstFrame = false, keepUseless = false,
+  saveFn: proc(i: int, content: string),
+): int =
+  assert isSorted tl
 
   var
     currentTime = 0.0
@@ -104,7 +101,8 @@ proc saveGif*(
 
       block takeSnapShot:
         if currentTime in preview:
-          writeFile(dir / genFrameFileName(fname, savedCount), $stage.canvas)
+          # writeFile(dir / genFrameFileName(fname, savedCount), $stage.canvas)
+          saveFn(savedCount, $stage.canvas)
           savedCount.inc
 
         if justFirstFrame:
@@ -112,7 +110,70 @@ proc saveGif*(
 
       currentTime += frameDuration
 
+  savedCount
+
+func wrapSVG*(id, svg: string): string =
+  fmt"""<div id="{id}" class="frame">{svg}</div>"""
+
+proc saveGif*(
+  tl: TimeLine, outputPath: string,
+  stage: SVGStage, frameRate: FPS, scale = 1.0,
+  preview = 0.ms .. 10_000.ms, repeat = 1,
+  justFirstFrame = false, keepUseless = false,
+) =
+  ## note: the best fps for magick is 50.fps
+  let
+    frameDuration = 1000 / frameRate
+    (dir, fname, _) = outputPath.splitFile
+
+  proc saveCallback(i: int, s: string) =
+    writeFile dir/genFrameFileName(fname, i), s
+
+  let framesCount = save(
+    tl, stage, frameDuration,
+    preview, justFirstFrame, keepUseless,
+    saveCallback,
+  )
+
   echo execProcess("magick.exe", options = {poUsePath}, args = [
    "-delay", $frameDuration.toMagickFrameDelay,
-    fmt"{dir}/*.svg", outputPath,
+    dir/"*.svg", outputPath,
   ])
+
+proc quickView*(
+  tl: TimeLine, outputPath: string,
+  stage: SVGStage, frameRate: FPS, scale = 1.0,
+  preview = 0.ms .. 10_000.ms, repeat = 1,
+  justFirstFrame = false, keepUseless = false,
+) =
+  let frameDuration = 1000 / frameRate
+
+  var acc = ""
+  proc saveCallback(i: int, s: string) =
+    acc &= wrapSVG(fmt"f-{i}", s)
+
+  let framesCount = save(
+    tl, stage, frameDuration,
+    preview, justFirstFrame, keepUseless,
+    saveCallback,
+  )
+
+  writeFile("./temp/out.html", fmt"""
+    <html>
+    <body>{acc}</body>
+    <script>
+      var 
+        i = 0,
+        len = {framesCount},
+        frameHeight = {stage.canvas.height},
+        frameDuration = {frameDuration}
+
+      setInterval(() => {{
+        window.scroll(0, frameHeight * i)
+        i += 1
+
+        if (i == len) i = 0
+      }}, frameDuration)
+    </script>
+    </html>
+  """)
