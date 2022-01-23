@@ -136,10 +136,13 @@ proc saveGif*(
     saveCallback,
   )
 
+  echo "start converting..."
   echo execProcess("magick.exe", options = {poUsePath}, args = [
    "-delay", $frameDuration.toMagickFrameDelay,
     dir/"*.svg", outputPath,
   ])
+  echo "done"
+
 
 proc quickView*(
   tl: TimeLine, outputPath: string,

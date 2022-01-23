@@ -1,4 +1,4 @@
-import std/[tables, random]
+import std/[tables, random, sugar]
 import motionly
 
 randomize()
@@ -20,21 +20,22 @@ defStage mystage(width = 1080, height = 1080), baseParserMap:
       embed readFile("./assets/motherT.svg")
       embed readFile("./assets/blessT.svg")
 
-    group() as @party
+  group() as @party
 
 
 let
   screen = p(1080.px, 1080.px)
   hscreen = screen / 2
 
+proc randSign(): int =
+  if sample([false, true]): -1
+  else: +1
+
 proc randDeg(): float =
-  let direction =
-    if sample([false, true]): -1
-    else: +1
+  toFloat randSign() * rand(20 .. 50)
 
-  toFloat:
-    direction * rand(20 .. 50)
-
+func eFall(t: Progress): float =
+  -4 * t * (t-1)
 
 defTimeline timeline, mystage:
   flow hideTextsExcept(index: int):
@@ -60,12 +61,6 @@ defTimeline timeline, mystage:
     if rotate:
       register @textWrapper.trotate(randDeg()) ~> (400.ms, eInBack, 400.ms)
 
-  flow genFLowers():
-    discard
-
-  flow animateFlowers():
-    discard
-
   before:
     @center.transforms = @[translate(hscreen.x, hscreen.y)]
 
@@ -87,8 +82,27 @@ defTimeline timeline, mystage:
   after 300.ms:
     register @center.tmove(p(0, -500.px)) ~> (300.ms, eOutCirc)
 
-  after 500.ms:
-    discard
+  after 300.ms:
+    let rose = parseIR toIR readFile("./assets/rose.svg")
+    for i in 1..30:
+      let
+        y = screen.y + 100.px
+        x = rand(0.px .. screen.x)
+        dx = rand(50.px .. 200.px) * randSign().toFloat
+        dy = -screen.y * rand(0.4 .. 0.9)
+        dt = rand 800.ms .. 1300.ms
+        delay = rand 0.ms .. 800.ms
+        dr = randSign().toFloat * rand(0.0 .. 50.0) 
+
+      var myf: SVGNode
+      deepCopy(myf, rose)
+      myf.transforms.add translate(x, y)
+      @party.add myf
+
+      register myf.tmove(p(dx, 0)) ~> (dt, eLinear, delay)
+      register myf.tmove(p(0, dy)) ~> (dt, eFall, delay)
+      register myf.trotate(dr) ~> (dt, eLinear, delay)
 
 
-timeline.quickView("./temp/out.html", mystage, 50.fps, preview = 3000.ms .. 5000.ms)
+timeline.quickView("./temp/out.html", mystage, 50.fps)
+# timeline.saveGif("./temp/out.gif", mystage, 50.fps)

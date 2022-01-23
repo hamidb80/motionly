@@ -26,6 +26,10 @@ proc replaceNode*(n: var SVGNode, with: SVGNode) =
 
   raise newException(ValueError, "parent is not registered")
 
+proc add*(n, sub: SVGNode) =
+  n.nodes.add sub
+  sub.parent = n
+
 proc `<-`*(n: var SVGNode, with: SVGNode) =
   replaceNode(n, with)
 
@@ -70,7 +74,7 @@ func parseGroup*(
 func parseSVGCanvas*(
   tag: string, attrs: Table[string, string], children: seq[SVGNode]
 ): SVGNode =
-  
+
   var c = SVGCanvas(name: "svg", nodes: children)
   for k, v in attrs:
     case k:
