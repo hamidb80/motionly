@@ -1,7 +1,13 @@
-import std/[os, osproc, strformat, tables, algorithm, math, sequtils]
+import std/[
+  strformat, tables, algorithm, math, sequtils, strutils,
+  os, osproc, threadpool, math
+]
 import types, ir
 
-func findIdImpl*(n: SVGNode, id: string, result: var SVGNode) =
+const allFrames = 0.ms .. Inf
+
+
+func findIdImpl(n: SVGNode, id: string, result: var SVGNode) =
   if n.attrs.getOrDefault("id", "") == id:
     result = n
   else:
@@ -43,16 +49,13 @@ func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
 func toMagickFrameDelay(ms: MS): int =
   (ms / 10).floor.toint.max(2)
 
-func genFrameFileName(fname: string, index: int): string =
-  fmt"{fname}_{index:06}.svg"
+type SaveCallBack = proc(i: int, content: string)
 
-# TODO clean svg files unless you're in debug mode
-# TODO use web browser preview in debug mode
-proc save(
+proc saveImpl(
   tl: TimeLine, stage: SVGStage,
   frameDuration: float, preview: HSlice[MS, MS],
   justFirstFrame = false, keepUseless = false,
-  saveFn: proc(i: int, content: string),
+  saveFn: SaveCallBack,
 ): int =
   assert isSorted tl
 
@@ -112,60 +115,73 @@ proc save(
 
   savedCount
 
-func wrapSVG*(id, svg: string): string =
-  fmt"""<div id="{id}" class="frame">{svg}</div>"""
-
 proc saveGif*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, scale = 1.0,
-  preview = 0.ms .. 10_000.ms, repeat = 1,
+  preview = allFrames, repeat = 1,
   justFirstFrame = false, keepUseless = false,
 ) =
-  ## note: the best fps for magick is 50.fps
-  ## TODO apply FRAME LIMIT | 50 for GIF
+  doAssert frameRate <= 50.fps, "maximum FPS for GIF is 50"
   let
     frameDuration = 1000 / frameRate
-    (dir, fname, _) = outputPath.splitFile
+    (dir, _, _) = outputPath.splitFile
 
-  proc saveCallback(i: int, s: string) =
-    writeFile dir/genFrameFileName(fname, i), s
+    saveCallback = proc(i: int, s: string) =
+      writeFile dir/fmt"{i:06}.svg", s
 
-  let framesCount = save(
+  let framesCount = saveImpl(
     tl, stage, frameDuration,
     preview, justFirstFrame, keepUseless,
-    saveCallback,
-  )
+    saveCallback)
 
-  echo "start converting..."
   echo execProcess("magick.exe", options = {poUsePath}, args = [
    "-delay", $frameDuration.toMagickFrameDelay,
     dir/"*.svg", outputPath,
   ])
-  echo "done"
 
+  for i in 0 ..< framesCount:
+    removeFile dir / fmt"{i:06}.svg"
 
 proc quickView*(
   tl: TimeLine, outputPath: string,
   stage: SVGStage, frameRate: FPS, scale = 1.0,
-  preview = 0.ms .. 10_000.ms, repeat = 1,
+  preview = allFrames, repeat = 1,
   justFirstFrame = false, keepUseless = false,
+  savePNG = false
 ) =
-  ## TODO apply FRAME LIMIT :: 60 for quickview
-  let frameDuration = 1000 / frameRate
 
-  var acc = ""
-  proc saveCallback(i: int, s: string) =
-    acc &= wrapSVG(fmt"f-{i}", s)
+  doAssert frameRate <= 60.fps, "maximum FPS for a web browser is 60"
+  var body: string
+  let
+    frameDuration = 1000 / frameRate
+    (dir, _, _) = outputPath.splitFile
 
-  let framesCount = save(
-    tl, stage, frameDuration,
-    preview, justFirstFrame, keepUseless,
-    saveCallback,
-  )
+    cb =
+      if savePNG:
+        (proc(i: int, s: string) =
+          writeFile dir/fmt"{i:06}.svg", s)
+      else:
+        (proc(i: int, s: string) =
+          body &= fmt"""<div id="f-{i}" class="frame">{s}</div>""")
+
+    framesCount = saveImpl(
+      tl, stage, frameDuration,
+      preview, justFirstFrame, keepUseless,
+      cb)
+
+  if savePNG:
+    for i in 0 ..< framesCount:
+      body &= fmt"""<div><img src="./{i}.png" class="frame"/></div>"""
+
+      discard spawn execProcess("magick.exe", options = {poUsePath}, args = [
+        dir / fmt"{i:06}.svg", dir / fmt"{i}.png"])
+
+    sync()
+
 
   writeFile("./temp/out.html", fmt"""
     <html>
-    <body>{acc}</body>
+    <body>{body}</body>
     <script>
       var 
         i = 0,
@@ -180,5 +196,4 @@ proc quickView*(
         if (i == len) i = 0
       }}, frameDuration)
     </script>
-    </html>
-  """)
+    </html>""")

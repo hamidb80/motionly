@@ -88,6 +88,7 @@ type
 
   PX* = float
   FPS* = float
+  DEG* = float
 
 func len*(rng: HSlice[float, float]): float =
   rng.b - rng.a
@@ -97,6 +98,9 @@ func ms*(f: float): MS = f
 
 func px*(i: int): PX = i.toFloat
 func px*(f: float): PX = f
+
+func deg*(i: int): DEG = i.toFloat
+func deg*(f: float): DEG = f
 
 func fps*(i: int): FPS = i.toFloat
 func fps*(f: float): FPS = f

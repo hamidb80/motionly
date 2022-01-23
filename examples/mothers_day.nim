@@ -92,7 +92,7 @@ defTimeline timeline, mystage:
         dy = -screen.y * rand(0.4 .. 0.9)
         dt = rand 800.ms .. 1300.ms
         delay = rand 0.ms .. 800.ms
-        dr = randSign().toFloat * rand(0.0 .. 50.0) 
+        dr = randSign().toFloat * rand(0.0 .. 50.0)
 
       var myf: SVGNode
       deepCopy(myf, rose)
@@ -104,5 +104,5 @@ defTimeline timeline, mystage:
       register myf.trotate(dr) ~> (dt, eLinear, delay)
 
 
-timeline.quickView("./temp/out.html", mystage, 50.fps)
+timeline.quickView("./temp/out.html", mystage, 50.fps, savePNG = true)
 # timeline.saveGif("./temp/out.gif", mystage, 50.fps)
