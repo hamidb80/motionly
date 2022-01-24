@@ -19,11 +19,11 @@ type
   Point* = object
     x*, y*: float
 
-  TransformFns = enum
+  TransformFns* = enum
     tfTranslate, tfRotate, tfScale, tfSkew, tfMatrix
 
   Transform* = ref object
-    case kind: TransformFns
+    case kind*: TransformFns
     of tfTranslate:
       tx*, ty*: float
 
@@ -72,6 +72,7 @@ type
 
   Recording* = seq[Animation]
 
+  # ActionFn* = proc(commonStage: SVGStage, cntx: ptr Recording,
   ActionFn* = proc(commonStage: SVGStage, cntx: var Recording,
       currentTime: MS) {.nimcall.}
 
@@ -149,6 +150,9 @@ func scale*(sx, sy: float): Transform =
 
 func translate*(tx, ty: float): Transform =
   Transform(kind: tfTranslate, tx: tx, ty: ty)
+
+func translate*(p: Point): Transform =
+  translate(p.x, p.y)
 
 func translateX*(tx: float): Transform =
   translate(tx, 0)

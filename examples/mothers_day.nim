@@ -1,4 +1,4 @@
-import std/[tables, random, sugar]
+import std/[random, sugar, threadpool]
 import motionly
 
 randomize()
@@ -12,7 +12,7 @@ defStage mystage(width = 1080, height = 1080), baseParserMap:
   rect(width = 1080, height = 1080) as @bg
 
   group() as @center:
-    circle(r = 340, fill = lightPink) as @outer
+    circle(r = 340, fill = lightPink)
     circle(r = 300) as @inner
 
     group() as @textWrapper:
@@ -22,11 +22,6 @@ defStage mystage(width = 1080, height = 1080), baseParserMap:
 
   group() as @party
 
-
-let
-  screen = p(1080.px, 1080.px)
-  hscreen = screen / 2
-
 proc randSign(): int =
   if sample([false, true]): -1
   else: +1
@@ -34,52 +29,56 @@ proc randSign(): int =
 proc randDeg(): float =
   toFloat randSign() * rand(20 .. 50)
 
+template defCopy(old): untyped =
+  var ident: typeof old
+  deepCopy(ident, old)
+  ident
+
 func eFall(t: Progress): float =
   -4 * t * (t-1)
 
+let screen = mystage.canvas.getsize()
+
+proc hideTextsExcept(textWrapper: SVGNode, index: int) =
+  for i, n in textWrapper.nodes:
+    n.opacity =
+      if i == index: 1.0
+      else: 0.0
+
 defTimeline timeline, mystage:
-  flow hideTextsExcept(index: int):
-    for i, n in @textWrapper.nodes:
-      n.opacity =
-        if i == index: 1.0
-        else: 0.0
-
-  flow setPink():
-    @inner.attrs["fill"] = white
-    @bg.attrs["fill"] = pink
-
-  flow setWhite():
-    @inner.attrs["fill"] = pink
-    @bg.attrs["fill"] = white
-
-  flow drop(rotate: bool):
-    @center.transforms.setLen 1
-    @textWrapper.transforms.setLen 0
-
-    register @center.tscale(2.4 .. 0.6) ~> (700.ms, eInExpo)
-
-    if rotate:
-      register @textWrapper.trotate(randDeg()) ~> (400.ms, eInBack, 400.ms)
-
   before:
-    @center.transforms = @[translate(hscreen.x, hscreen.y)]
+    let 
+      frameLen = 1000.ms
+      sc = scale(1.0)
+      rt = rotation(0.0)
 
-  frame 1000.ms:
-    !setPink()
-    !hideTextsExcept(0)
-    !drop(true)
+    @center.transforms = @[translate(screen / 2), sc]
+    @textWrapper.transforms.add rt
+    
 
-  frame 1000.ms:
-    !setWhite()
-    !hideTextsExcept(1)
-    !drop(true)
+    for i in 0 ..< 3:
+      let
+        delay = frameLen * i.toFloat
+        u = capture(i, delay): (proc(a: float, t: Progress) =
+          if i mod 2 == 0:
+            @inner.fill = white
+            @bg.fill = pink
+          else:
+            @inner.fill = pink
+            @bg.fill = white
 
-  frame 1000.ms:
-    !setPink()
-    !hideTextsExcept(2)
-    !drop(false)
+          hideTextsExcept(@textWrapper, i)
+        )
 
-  after 300.ms:
+      register u |> delay
+      register @center.tscale(2.4 .. 0.6, sc) ~> (700.ms, eInExpo, delay)
+
+      register @textWrapper.trotate(0.deg .. 0.deg, rt) |> delay
+      if i != 2:
+        register @textWrapper.trotate(0.deg .. randDeg(), rt) ~> (400.ms, eInBack, 400.ms + delay)
+
+
+  after 3000.ms:
     register @center.tmove(p(0, -500.px)) ~> (300.ms, eOutCirc)
 
   after 300.ms:
@@ -94,15 +93,15 @@ defTimeline timeline, mystage:
         delay = rand 0.ms .. 800.ms
         dr = randSign().toFloat * rand(0.0 .. 50.0)
 
-      var myf: SVGNode
-      deepCopy(myf, rose)
+      var myf = defCopy(rose)
       myf.transforms.add translate(x, y)
       @party.add myf
 
       register myf.tmove(p(dx, 0)) ~> (dt, eLinear, delay)
       register myf.tmove(p(0, dy)) ~> (dt, eFall, delay)
-      register myf.trotate(dr) ~> (dt, eLinear, delay)
+      register myf.trotate(0.deg .. dr) ~> (dt, eLinear, delay)
 
 
-timeline.quickView("./temp/out.html", mystage, 50.fps, savePNG = true)
+setMaxPoolSize(12)
+timeline.quickView("./temp/out.html", mystage, 60.fps, savePng = true)
 # timeline.saveGif("./temp/out.gif", mystage, 50.fps)

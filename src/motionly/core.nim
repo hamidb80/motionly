@@ -251,6 +251,8 @@ func `~>`*(
 ): Transition =
   u.genTransition(props.delay, props.len, props.easing)
 
+proc `|>`*(code: UpdateFn, delay: MS): Transition =
+  genImmidate code, delay
 
 template register*(t: Transition): untyped {.dirty.} =
   cntx.add t.toAnimation()

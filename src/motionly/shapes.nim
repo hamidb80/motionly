@@ -94,6 +94,9 @@ func parseRaw*[S: SVGNode](
 
   acc
 
+func getSize*(c: SVGCanvas): Point =
+  p(c.width, c.height)
+
 method specialAttrs*(n: SVGNode): Table[string, string] {.base.} = discard
 
 method specialAttrs*(n: SVGCanvas): Table[string, string] =
@@ -134,3 +137,9 @@ method opacity*(n: SVGNode): float {.base.} =
 
 method `opacity=`*(n: SVGNode, o: Progress) {.base.} =
   n.styles["opacity"] = $o
+
+method fill*(n: SVGNode): string {.base.} =
+  n.styles["fill"]
+
+method `fill=`*(n: SVGNode, f: string) {.base.} =
+  n.styles["fill"] = f

@@ -1,8 +1,8 @@
 import std/[
   strformat, tables, algorithm, math, sequtils, strutils,
-  os, osproc, threadpool, math
+  os, osproc, threadpool
 ]
-import types, ir
+import types, ir, easing
 
 const allFrames = 0.ms .. Inf
 
@@ -31,6 +31,9 @@ func toAnimation*(t: Transition): Animation =
 
 func genTransition*(u: UpdateFn, delay, len: MS, e: EasingFn): Transition =
   Transition(delay: delay, totalTime: len, easingFn: e, updateFn: u)
+
+func genImmidate*(u: UpdateFn, delay: MS): Transition =
+  Transition(delay: delay, easingFn: eLinear, updateFn: u)
 
 func resolveTimeline*(kfs: seq[KeyFrameIR]): TimeLine =
   var lastTime = 0.ms
@@ -97,7 +100,10 @@ proc saveImpl(
 
         activeAnimations.keepItIf:
           let timeProgress = toProgress:
-            (currentTime - it.startTime) / it.t.totalTime
+            if it.t.totalTime == 0: # for immidiate ones
+              1.0
+            else:
+              (currentTime - it.startTime) / it.t.totalTime
 
           it.t.updateFn(it.t.easingFn(timeProgress), timeProgress)
           not timeProgress.ended
@@ -114,6 +120,8 @@ proc saveImpl(
       currentTime += frameDuration
 
   savedCount
+
+# TODO add ffmpeg backend
 
 proc saveGif*(
   tl: TimeLine, outputPath: string,
@@ -149,7 +157,7 @@ proc quickView*(
   justFirstFrame = false, keepUseless = false,
   savePNG = false
 ) =
-
+  ## you can use setMaxPoolSize proc in std/threadpool
   doAssert frameRate <= 60.fps, "maximum FPS for a web browser is 60"
   var body: string
   let
