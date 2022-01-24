@@ -47,19 +47,19 @@ proc hideTextsExcept(textWrapper: SVGNode, index: int) =
 
 defTimeline timeline, mystage:
   before:
-    let 
+    let
       frameLen = 1000.ms
       sc = scale(1.0)
       rt = rotation(0.0)
 
     @center.transforms = @[translate(screen / 2), sc]
     @textWrapper.transforms.add rt
-    
+
 
     for i in 0 ..< 3:
       let
         delay = frameLen * i.toFloat
-        u = capture(i, delay): (proc(a: float, t: Progress) =
+        u = capture(i, delay): toUpdateFn:
           if i mod 2 == 0:
             @inner.fill = white
             @bg.fill = pink
@@ -68,14 +68,14 @@ defTimeline timeline, mystage:
             @bg.fill = white
 
           hideTextsExcept(@textWrapper, i)
-        )
-
+        
       register u |> delay
       register @center.tscale(2.4 .. 0.6, sc) ~> (700.ms, eInExpo, delay)
 
       register @textWrapper.trotate(0.deg .. 0.deg, rt) |> delay
       if i != 2:
-        register @textWrapper.trotate(0.deg .. randDeg(), rt) ~> (400.ms, eInBack, 400.ms + delay)
+        register @textWrapper.trotate(0.deg .. randDeg(), rt) ~> (400.ms,
+            eInBack, 400.ms + delay)
 
 
   after 3000.ms:
@@ -103,5 +103,5 @@ defTimeline timeline, mystage:
 
 
 setMaxPoolSize(12)
-timeline.quickView("./temp/out.html", mystage, 60.fps, savePng = true)
+timeline.quickView("./temp/out.html", mystage, 60.fps)
 # timeline.saveGif("./temp/out.gif", mystage, 50.fps)

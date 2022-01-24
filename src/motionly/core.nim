@@ -254,6 +254,12 @@ func `~>`*(
 proc `|>`*(code: UpdateFn, delay: MS): Transition =
   genImmidate code, delay
 
+template toUpdateFn*(code): untyped =
+  (proc(ap: float, tp: Progress) = code)
+
+template toUpdateFn*(animationProgress, timeProgress, code): untyped =
+  (proc(animationProgress: float, timeProgress: Progress) = code)
+
 template register*(t: Transition): untyped {.dirty.} =
   cntx.add t.toAnimation()
 
