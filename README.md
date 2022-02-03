@@ -19,11 +19,9 @@ here, you code animations in Nim!
 
 
 ## Goals:
-* [ ] add svg manipulation like: scale, transform, ... (see this)[https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform]
-* [ ] add deep copy or delete from screen
-* [ ] custom animation function
-* [ ] runs on browser
-* [ ] control preview like start and stop frame
-* [ ] useing nim code with DLS
-* [ ] compose it with another stage and control flow (make it reusable)
+* [x] add svg manipulation like: scale, transform, ... (see this)[https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform]
+* [x] custom animation function
+* [x] runs on browser
+* [x] control preview like start and stop frame
+* [x] useing nim code with DLS
 
