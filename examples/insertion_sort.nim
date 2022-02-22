@@ -178,7 +178,7 @@ defTimeline timeline, mainStage:
 
   before:
     @key.transforms.add translate(113.px, 100.px)
-    @title.transforms.add translate((WIDTH.toFloat - 311.0) / 2, 30.0)
+    @title.transforms.add translate((WIDTH.toFloat - 384.0) / 2, 30.0)
     !initCursors()
     !initNumberBoxes()
     !setCursorIndex(cJ, 1, 0.0, true)

@@ -190,6 +190,13 @@ proc quickView*(
   writeFile("./temp/out.html", fmt"""
     <html>
     <body>{body}</body>
+    <style>
+      *{{
+        padding: 0;
+        margin: 0;
+        box-sizing: border-box;
+      }}
+    </style>
     <script>
       var 
         i = 0,
