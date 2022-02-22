@@ -8,3 +8,6 @@ func merge*[K, V](main: Table[K, V], ts: varargs[Table[K, V]]): Table[K, V] =
 
 func containsAll*[K, _](t: Table[K, _], keys: openArray[K]): bool =
   keys.allIt it in t
+
+func isEmpty*(s: string): bool =
+  s == ""

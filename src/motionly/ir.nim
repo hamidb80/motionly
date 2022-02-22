@@ -8,14 +8,14 @@ let baseParserMap*: ParserMap = toTable {
 
   "rect": parseRect,
   "circle": parseCircle,
-  "path": parseRaw[SVGGroup],
+  "path": parseRaw[SVGPath],
+  "text": parseText,
   # "arc": parseRaw[SVGArc],
 }
 
-proc parseIR*(
-  ir: IRNode, parent: SVGNode = nil,
-  parserMap: ParserMap = baseParserMap
-): SVGNode =
+proc parseIR*(ir: IRNode, parent: SVGNode = nil,
+  parserMap: ParserMap = baseParserMap): SVGNode =
+
   let nodes = ir.children.mapIt parseIR(it, nil, parserMap)
 
   if ir.tag in parserMap:
@@ -43,28 +43,33 @@ proc toIR*(svgContent: string): IRNode =
   toIRImpl parseXml(svgContent), result
 
 func toIR(n: SVGNode): IRNode =
-  var otherAttrs: Table[string, string]
+  case n.kind:
+  of mjText: IRNode(content: n.content)
+  of mjELem:
+    var otherAttrs: Table[string, string]
 
-  if n.transforms.len != 0:
-    otherAttrs["transform"] = n.transforms.join(" ")
-  if n.styles.len != 0: 
-    otherAttrs["style"] = n.styles.pairs.toseq.mapIt(fmt"{it[0]}: {it[1]}").join "; "
+    if n.transforms.len != 0:
+      otherAttrs["transform"] = n.transforms.join(" ")
 
-  IRNode(
-    tag: n.name,
-    attrs: merge(specialAttrs(n), otherAttrs, n.attrs).pairs.toseq,
-    children: n.nodes.map toIR
-  )
+    if n.styles.len != 0:
+      otherAttrs["style"] = n.styles.pairs.toseq.mapIt(
+          fmt"{it[0]}: {it[1]}").join "; "
+
+    IRNode(tag: n.name,
+      attrs: merge(specialAttrs(n), otherAttrs, n.attrs).pairs.toseq,
+      children: n.nodes.map toIR)
 
 func `$`(ir: IRNode): string =
-  let ats = ir.attrs.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "
-
-  if ir.children.len == 0:
-    fmt"<{ir.tag} {ats}/>"
-
+  if not isEmpty ir.content: ir.content
   else:
-    let body = ir.children.map(`$`).join
-    fmt"<{ir.tag} {ats}>{body}</{ir.tag}>"
+    let ats = ir.attrs.mapIt(fmt "{it[0]}=\"{it[1]}\"").join " "
+
+    if ir.children.len == 0:
+      fmt"<{ir.tag} {ats}/>"
+
+    else:
+      let body = ir.children.map(`$`).join
+      fmt"<{ir.tag} {ats}>{body}</{ir.tag}>"
 
 func `$`*(n: SVGNode): string {.inline.} =
   $ n.toIR

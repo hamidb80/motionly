@@ -59,8 +59,7 @@ func ast2IR(n: NimNode, storageid: var ComponentMap): NimNode =
       `IRNode`(
         tag: `tag`,
         attrs: @`attrs`,
-        children: @`children`
-      )
+        children: @`children`)
 
   else:
     assert targetNode[CommandIdent].strval == "embed"

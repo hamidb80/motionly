@@ -3,15 +3,18 @@ import std/[tables, options, strformat, strutils]
 # TODO use strtabs
 
 type
+  MajorSVGKinds* = enum
+    mjELem, mjText
+
   ## IR :: Intermediate representation | a bridge between compile time and runtime
   IRNode* = object
     tag*: string
     attrs*: seq[(string, string)]
     children*: seq[IRNode]
+    content*: string
 
-  IRParser* = proc(
-    tag: string, attrs: Table[string, string], children: seq[SVGNode]
-  ): SVGNode {.nimcall.}
+  IRParser* = proc(tag: string, attrs: Table[string, string],
+    children: seq[SVGNode]): SVGNode {.nimcall.}
 
   ParserMap* = Table[string, IRParser] # tag name => parser func
   ComponentMap* = Table[string, tuple[isseq: bool, count: int]]
@@ -41,11 +44,17 @@ type
       args*: array[6, float]
 
   SVGNode* = ref object of RootObj
-    name*: string
-    attrs*, styles*: Table[string, string]
     parent*: SVGNode
-    nodes*: seq[SVGNode]
-    transforms*: seq[Transform]
+
+    case kind*: MajorSVGKinds
+    of mjELem:
+      name*: string
+      attrs*, styles*: Table[string, string]
+      nodes*: seq[SVGNode]
+      transforms*: seq[Transform]
+
+    of mjText:
+      content*: string
 
   SVGCanvas* = ref object of SVGNode # <svg> ... </svg>
     width*, height*: int

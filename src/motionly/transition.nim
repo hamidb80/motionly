@@ -23,8 +23,7 @@ template addIfNotNil(s: SVGNode, trWrapper, existing, newTr: untyped): untyped =
       s.transforms.add acc
       acc
 
-proc tmove*(s: SVGNode, vec: Point,
-  existing: Transform = nil, ops = noOption
+proc tmove*(s: SVGNode, vec: Point, existing: Transform = nil, ops = noOption
 ): UpdateFn =
 
   addIfNotNil s, t, existing, translate(0, 0)
@@ -36,8 +35,7 @@ proc tmove*(s: SVGNode, vec: Point,
 
   update
 
-proc topacity*(
-  s: SVGNode, states: HSlice[float, float], ops = noOption
+proc topacity*(s: SVGNode, states: HSlice[float, float], ops = noOption
 ): UpdateFn =
   let d = states.len
 
@@ -53,8 +51,7 @@ proc fadeIn*(s: SVGNode): UpdateFn =
   topacity(s, 0.0 .. 1.0)
 
 proc tscale*(s: SVGNode, states: HSlice[float, float],
-    existing: Transform = nil, ops = noOption
-): UpdateFn =
+    existing: Transform = nil, ops = noOption): UpdateFn =
 
   let ds = states.len
   addIfNotNil s, t, existing, scale(1, 1)
@@ -66,9 +63,8 @@ proc tscale*(s: SVGNode, states: HSlice[float, float],
 
   update
 
-proc trotate*(
-  s: SVGNode, r: HSlice[float, float], existing: Transform = nil, ops = noOption
-): UpdateFn =
+proc trotate*(s: SVGNode, r: HSlice[float, float],
+  existing: Transform = nil, ops = noOption): UpdateFn =
 
   addIfNotNil s, t, existing, rotation(r.a)
   let dr = len r

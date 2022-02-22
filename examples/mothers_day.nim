@@ -29,11 +29,6 @@ proc randSign(): int =
 proc randDeg(): float =
   toFloat randSign() * rand(20 .. 50)
 
-template defCopy(old): untyped =
-  var ident: typeof old
-  deepCopy(ident, old)
-  ident
-
 func eFall(t: Progress): float =
   -4 * t * (t-1)
 
@@ -93,7 +88,7 @@ defTimeline timeline, mystage:
         delay = rand 0.ms .. 800.ms
         dr = randSign().toFloat * rand(0.0 .. 50.0)
 
-      var myf = defCopy(rose)
+      var myf = deepCopy(rose)
       myf.transforms.add translate(x, y)
       @party.add myf
 
