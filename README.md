@@ -1,6 +1,9 @@
 # motionly
 here, you code animations in Nim!
 
+## Demo:
+[insertion sort](https://www.aparat.com/v/n0jqu)
+
 **see these for inspiration:**
 1. http://thesecretlivesofdata.com/raft/
 2. https://www.introbrand.com/
